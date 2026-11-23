@@ -1,0 +1,2960 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a14">
+<title>Pro Manager 27</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; background: #1a1a2e; color: #eee; margin: 0; padding: 20px; }
+  h1 { color: #e94560; }
+  h2 { color: #e94560; margin-top: 0; }
+  h3 { color: #e94560; }
+  button { background: #16213e; color: #eee; border: 1px solid #e94560; padding: 10px 20px; margin: 5px; cursor: pointer; border-radius: 6px; font-size: 14px; }
+  button:hover { background: #e94560; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .panel { background: #16213e; border-radius: 10px; padding: 20px; margin: 15px 0; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 8px; text-align: left; border-bottom: 1px solid #333; }
+  th { color: #e94560; }
+  .hidden { display: none; }
+  .team-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .team-btn { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 15px; }
+  #topBar { background: #0f3460; padding: 10px 20px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .budget { color: #4ade80; font-weight: bold; font-size: 16px; }
+  .match-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #2a2a4a; }
+  .score { font-weight: bold; color: #e94560; font-size: 18px; }
+  .pos-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 5px; }
+  .pos-GK { background: #f59e0b; color: #000; }
+  .pos-DF { background: #3b82f6; color: #fff; }
+  .pos-MF { background: #10b981; color: #fff; }
+  .pos-WG { background: #8b5cf6; color: #fff; }
+  .pos-FW { background: #e94560; color: #fff; }
+  .hint-box { background: #2a1a3a; border-left: 3px solid #e94560; padding: 10px; border-radius: 4px; margin: 10px 0; font-size: 13px; }
+  .formation-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+  .formation-btn.active { background: #e94560; }
+  .team-power { font-size: 20px; font-weight: bold; color: #e94560; }
+  .live-event { padding: 6px 10px; border-bottom: 1px solid #2a2a4a; animation: fadein 0.3s; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+  .stadium-wrap { display: flex; flex-direction: column; align-items: center; margin: 15px 0; }
+  .scoreboard { display: flex; justify-content: center; align-items: center; gap: 15px; background: #0f3460; padding: 10px 20px; border-radius: 8px; margin-bottom: 10px; font-size: 18px; font-weight: bold; border: 1px solid #e94560; min-width: 300px; }
+  .scoreboard .team { color: #fff; font-size: 15px; }
+  .scoreboard .team.home { color: #4ade80; }
+  .scoreboard .team.away { color: #60a5fa; }
+  .scoreboard .sc { color: #e94560; font-size: 24px; }
+  .scoreboard .min { color: #ffd700; font-size: 16px; min-width: 45px; text-align: center; }
+  .pitch-container { width: 100%; max-width: 820px; background: #1b4332; border-radius: 10px; padding: 10px; box-shadow: 0 8px 25px rgba(0,0,0,0.6); }
+  .pitch { width: 100%; aspect-ratio: 2 / 1.15; background: repeating-linear-gradient(90deg, #2d6a4f 0 60px, #276045 60px 120px); border: 2px solid rgba(255,255,255,0.8); border-radius: 4px; position: relative; overflow: hidden; }
+  .pitch::before { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,0.4); }
+  .center-circle { position: absolute; left: 50%; top: 50%; width: 70px; height: 70px; border: 1.5px solid rgba(255,255,255,0.4); border-radius: 50%; transform: translate(-50%, -50%); }
+  .penalty-box { position: absolute; top: 50%; transform: translateY(-50%); width: 14%; height: 50%; border: 1.5px solid rgba(255,255,255,0.5); }
+  .penalty-box.left { left: 0; border-left: none; }
+  .penalty-box.right { right: 0; border-right: none; }
+  .goal-frame { position: absolute; top: 50%; transform: translateY(-50%); width: 2.5%; height: 20%; background: rgba(255,255,255,0.9); }
+  .goal-frame.left { left: 0; }
+  .goal-frame.right { right: 0; }
+  .pitch-player { position: absolute; transform: translate(-50%, -50%); transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1), top 0.6s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; align-items: center; z-index: 5; }
+  .pitch-player .shirt { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; color: #fff; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+  .pitch-player.home .shirt { background: #dc2626; }
+  .pitch-player.away .shirt { background: #2563eb; }
+  .pitch-player .plabel { font-size: 10px; color: #fff; margin-top: 1px; background: rgba(0,0,0,0.75); padding: 1px 4px; border-radius: 3px; white-space: nowrap; font-weight: bold; text-shadow: 1px 1px 1px rgba(0,0,0,0.9); max-width: 70px; overflow: hidden; text-overflow: ellipsis; }
+  .pitch-player.has-ball .shirt { box-shadow: 0 0 0 3px #ffd700, 0 0 15px #ffd700; }
+  .ball-icon { position: absolute; width: 18px; height: 18px; transform: translate(-50%, -50%); transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1), top 0.6s cubic-bezier(0.4, 0, 0.2, 1); font-size: 16px; z-index: 10; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.7)); }
+  .event-feed { max-height: 220px; overflow-y: auto; background: #0f3460; border-radius: 6px; padding: 8px; margin-top: 12px; }
+  .event-feed .live-event { font-size: 13px; }
+  .other-matches { margin-top: 15px; }
+  .drag-pitch { position: relative; width: 100%; max-width: 700px; aspect-ratio: 2 / 1.1; margin: 15px auto; background: repeating-linear-gradient(90deg, #2d6a4f 0 50px, #276045 50px 100px); border: 2px solid rgba(255,255,255,0.7); border-radius: 6px; }
+  .drag-pitch::before { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,0.4); }
+  .drag-player { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; cursor: grab; user-select: none; z-index: 5; }
+  .drag-player .dshirt { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; color: #fff; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.6); background: #dc2626; }
+  .drag-player .dlabel { font-size: 9px; color: #fff; margin-top: 2px; background: rgba(0,0,0,0.8); padding: 1px 4px; border-radius: 3px; white-space: nowrap; font-weight: bold; }
+  .drag-player.drop-target .dshirt { box-shadow: 0 0 0 4px #4ade80, 0 0 20px #4ade80; }
+  .bench-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+  .bench-item { background: #0f3460; border-radius: 6px; padding: 8px; text-align: center; cursor: grab; border: 2px solid transparent; }
+  .bench-item:hover { border-color: #4ade80; }
+  .bench-item .bname { font-weight: bold; font-size: 12px; }
+  .bench-item .binfo { font-size: 10px; color: #aaa; }
+  .transfer-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 800px) { .transfer-layout { grid-template-columns: 1fr; } }
+  .transfer-card { background: #0f3460; border-radius: 6px; padding: 10px; margin: 5px 0; display: flex; justify-content: space-between; align-items: center; }
+  .price-tag { color: #4ade80; font-weight: bold; margin: 0 10px; }
+  .buy-btn { background: #166534; border-color: #4ade80; }
+  .buy-btn:hover { background: #4ade80; color: #000; }
+  .sell-btn { background: #7f1d1d; border-color: #f87171; }
+  .sell-btn:hover { background: #f87171; color: #000; }
+  select { background:#16213e; color:#eee; border:1px solid #e94560; padding:5px; border-radius:4px; margin:0 12px 0 4px; }
+  input[type="text"] { background:#16213e; color:#eee; border:1px solid #e94560; padding:8px 12px; border-radius:6px; }
+  .trophy-shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin: 10px 0 20px; }
+  .trophy { background: linear-gradient(160deg, #1f2d52, #0f3460); border: 1px solid rgba(255,215,0,0.35); border-radius: 10px; padding: 14px 10px; text-align: center; box-shadow: 0 0 14px rgba(255,215,0,0.12); }
+  .trophy .ic { font-size: 44px; filter: drop-shadow(0 0 8px rgba(255,215,0,0.6)); }
+  .trophy .nm { font-size: 13px; font-weight: bold; margin-top: 6px; }
+  .trophy .sn { font-size: 12px; color: #ffd700; margin-top: 2px; }
+  .cabinet-card { background: #0f3460; border-radius: 10px; padding: 12px 16px; margin: 8px 0; }
+  .cabinet-card .cnt { font-size: 26px; font-weight: bold; color: #ffd700; }
+
+  /* ===== ATD STUDIO AÇILIŞ EKRANI ===== */
+  #splash { position: fixed; inset: 0; z-index: 99999; background: radial-gradient(circle at 50% 40%, #16213e 0%, #0a0a14 70%); display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.8s ease, visibility 0.8s; cursor: pointer; overflow: hidden; }
+  #splash.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+  #splash .glow { position: absolute; width: 420px; height: 420px; border-radius: 50%; background: radial-gradient(circle, rgba(233,69,96,0.35), transparent 65%); animation: pulse 3s ease-in-out infinite; }
+  #splash .logo { position: relative; font-size: clamp(48px, 14vw, 110px); font-weight: 900; letter-spacing: 0.12em; color: #fff; opacity: 0; transform: scale(0.8); animation: logoIn 1.2s 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; text-shadow: 0 0 30px rgba(233,69,96,0.8); }
+  #splash .logo span { color: #e94560; }
+  #splash .studio { position: relative; font-size: clamp(16px, 5vw, 30px); letter-spacing: 0.7em; color: #aaa; margin-top: 6px; padding-left: 0.7em; opacity: 0; animation: fadeUp 1s 1.1s ease forwards; }
+  #splash .line { position: relative; height: 2px; width: 0; background: linear-gradient(90deg, transparent, #e94560, transparent); margin-top: 18px; animation: lineGrow 1.2s 0.9s ease forwards; }
+  #splash .loader { position: absolute; bottom: 12%; width: min(260px, 60vw); height: 4px; background: #222; border-radius: 4px; overflow: hidden; }
+  #splash .loader i { display: block; height: 100%; width: 0; background: #e94560; animation: load 3.2s 0.3s ease-in-out forwards; }
+  #splash .tap { position: absolute; bottom: 6%; font-size: 12px; color: #666; letter-spacing: 0.15em; }
+  @keyframes logoIn { to { opacity: 1; transform: scale(1); } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes lineGrow { to { width: min(320px, 70vw); } }
+  @keyframes load { to { width: 100%; } }
+  @keyframes pulse { 0%, 100% { transform: scale(0.9); opacity: 0.6; } 50% { transform: scale(1.1); opacity: 1; } }
+
+  /* ===================== MODERN MENÜ TASARIMI ===================== */
+  :root {
+    --bg0: #070711; --bg1: #0d0f1f; --surface: rgba(255,255,255,0.045); --surface2: rgba(255,255,255,0.08);
+    --border: rgba(255,255,255,0.09); --text: #f1f3fa; --muted: #8b90a8;
+    --accent: #e94560; --accent2: #ff7a59; --green: #34d399; --blue: #60a5fa; --gold: #fbbf24;
+    --radius: 18px; --shadow: 0 10px 40px rgba(0,0,0,0.45);
+  }
+  html { -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    background: radial-gradient(900px 500px at 85% -10%, rgba(233,69,96,0.18), transparent 60%),
+                radial-gradient(700px 500px at -10% 20%, rgba(96,165,250,0.14), transparent 60%),
+                linear-gradient(180deg, var(--bg1), var(--bg0)) fixed !important;
+    color: var(--text) !important; min-height: 100vh; padding: 18px 16px 40px !important;
+    max-width: 1100px; margin: 0 auto;
+  }
+  h1, h2, h3 { color: var(--text) !important; letter-spacing: -0.02em; }
+
+  /* ----- Uygulama başlığı ----- */
+  .app-header { display: flex; align-items: center; gap: 14px; margin: 4px 0 16px; }
+  .app-logo { width: 50px; height: 50px; border-radius: 15px; display: grid; place-items: center; font-size: 26px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2)); box-shadow: 0 8px 24px rgba(233,69,96,0.45); flex-shrink: 0; }
+  .app-title { font-size: clamp(18px, 4.6vw, 26px); font-weight: 800; line-height: 1.1; margin: 0; }
+  .app-sub { font-size: 12px; color: var(--muted); margin-top: 3px; letter-spacing: 0.08em; text-transform: uppercase; }
+
+  /* ----- Üst bilgi çubuğu (chip'ler) ----- */
+  #topBar { background: var(--surface) !important; border: 1px solid var(--border); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border-radius: var(--radius) !important; padding: 12px 16px !important; margin-bottom: 18px !important; box-shadow: var(--shadow);
+    display: grid !important; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px 16px !important; }
+  #topBar > span { display: flex; flex-direction: column; gap: 2px; font-size: 10px !important; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted) !important; }
+  #topBar > span b, #topBar > span#teamPoints, #topBar > span#weekLabel { font-size: 15px; letter-spacing: 0; text-transform: none; }
+  #topBar #selectedTeamLabel { color: var(--text) !important; font-size: 16px; }
+  .budget { color: var(--green) !important; font-weight: 800 !important; font-size: 17px !important; }
+  #teamPoints:empty { display: none !important; }
+
+  /* ----- Paneller ----- */
+  .panel { background: var(--surface) !important; border: 1px solid var(--border); border-radius: var(--radius) !important;
+    padding: 22px !important; margin: 14px 0 !important; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: var(--shadow); }
+  .panel:not(.hidden) { animation: panelIn 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  @keyframes panelIn { from { opacity: 0; transform: translateY(14px) scale(0.99); } to { opacity: 1; transform: none; } }
+  .panel > h2 { font-size: 22px; font-weight: 800; margin-bottom: 14px !important; display: flex; align-items: center; gap: 10px; }
+  .panel > h2::before { content: ''; width: 5px; height: 22px; border-radius: 4px; background: linear-gradient(180deg, var(--accent), var(--accent2)); }
+  .panel h3 { font-size: 15px; color: var(--muted) !important; text-transform: uppercase; letter-spacing: 0.08em; }
+
+  /* ----- Butonlar ----- */
+  button { font-family: inherit; background: var(--surface2) !important; color: var(--text) !important; border: 1px solid var(--border) !important;
+    border-radius: 12px !important; padding: 11px 18px !important; font-weight: 600; transition: transform 0.15s, background 0.2s, box-shadow 0.2s, border-color 0.2s; }
+  button:hover:not(:disabled) { background: rgba(233,69,96,0.85) !important; border-color: transparent !important; transform: translateY(-1px); box-shadow: 0 8px 20px rgba(233,69,96,0.35); }
+  button:active:not(:disabled) { transform: scale(0.97); }
+  button:disabled { opacity: 0.35 !important; }
+  button.btn-back { background: transparent !important; color: var(--muted) !important; margin-top: 18px !important; padding-left: 14px !important; }
+  button.btn-back::before { content: '‹  '; font-size: 18px; }
+  button.btn-back:hover:not(:disabled) { background: var(--surface2) !important; color: var(--text) !important; box-shadow: none; }
+  #startBtn { background: linear-gradient(135deg, var(--accent), var(--accent2)) !important; border: none !important; font-size: 15px !important; padding: 13px 24px !important; box-shadow: 0 8px 24px rgba(233,69,96,0.4); }
+  button.buy-btn, button[onclick^="buyPlayer"] { background: rgba(52,211,153,0.18) !important; border: 1px solid rgba(52,211,153,0.5) !important; color: var(--green) !important; }
+  button[onclick^="buyPlayer"]:hover:not(:disabled) { background: var(--green) !important; color: #052e1f !important; box-shadow: 0 8px 20px rgba(52,211,153,0.35); }
+  button.sell-btn, button[onclick^="sellPlayer"] { background: rgba(248,113,113,0.15) !important; border: 1px solid rgba(248,113,113,0.5) !important; color: #fca5a5 !important; }
+  button[onclick^="sellPlayer"]:hover:not(:disabled) { background: #f87171 !important; color: #2a0808 !important; box-shadow: 0 8px 20px rgba(248,113,113,0.35); }
+  .formation-btn.active { background: linear-gradient(135deg, var(--accent), var(--accent2)) !important; border-color: transparent !important; }
+
+  /* ----- ANA MENÜ KARTLARI ----- */
+  #menu { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; backdrop-filter: none; }
+  #menu > h2 { padding: 0 4px; }
+  .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+  button.menu-card { position: relative; overflow: hidden; display: flex !important; flex-direction: column; align-items: flex-start; gap: 6px;
+    text-align: left; padding: 18px !important; min-height: 130px; border-radius: 20px !important;
+    background: linear-gradient(160deg, rgba(255,255,255,0.09), rgba(255,255,255,0.03)) !important; border: 1px solid var(--border) !important; box-shadow: var(--shadow); }
+  button.menu-card::after { content: ''; position: absolute; right: -30px; top: -30px; width: 110px; height: 110px; border-radius: 50%;
+    background: radial-gradient(circle, var(--c, #e94560), transparent 70%); opacity: 0.35; transition: opacity 0.25s, transform 0.25s; }
+  button.menu-card:hover:not(:disabled) { background: linear-gradient(160deg, rgba(255,255,255,0.14), rgba(255,255,255,0.05)) !important; transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.5); }
+  button.menu-card:hover:not(:disabled)::after { opacity: 0.7; transform: scale(1.25); }
+  .mc-ic { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; font-size: 24px; background: var(--c, #e94560); box-shadow: 0 6px 18px rgba(0,0,0,0.35); position: relative; z-index: 1; }
+  .mc-t { font-size: 16px; font-weight: 800; position: relative; z-index: 1; margin-top: 6px; }
+  .mc-d { font-size: 12px; color: var(--muted); font-weight: 500; position: relative; z-index: 1; }
+  button.menu-card.danger { --c: #ef4444; background: linear-gradient(160deg, rgba(239,68,68,0.16), rgba(239,68,68,0.04)) !important; border-color: rgba(239,68,68,0.3) !important; }
+
+  /* ----- Takım seçimi ----- */
+  .team-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important; gap: 12px !important; margin-bottom: 8px; }
+  .team-btn { background: linear-gradient(160deg, rgba(255,255,255,0.09), rgba(255,255,255,0.03)) !important; border: 1px solid var(--border) !important;
+    border-radius: 16px !important; padding: 16px 10px !important; gap: 6px !important; }
+  .team-btn span:first-child { width: 44px; height: 44px; display: grid !important; place-items: center; border-radius: 50%; background: var(--surface2); font-size: 22px !important; }
+
+  /* ----- Tablolar (puan durumu) ----- */
+  table { border-collapse: separate !important; border-spacing: 0 6px !important; }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted) !important; border: none !important; padding: 6px 10px !important; }
+  td { border: none !important; padding: 11px 10px !important; background: var(--surface); }
+  td:first-child { border-radius: 12px 0 0 12px; font-weight: 800; color: var(--muted); }
+  td:last-child { border-radius: 0 12px 12px 0; color: var(--gold); }
+  tbody tr:nth-child(-n+3) td:first-child { color: var(--green); }
+  tbody tr:nth-last-child(-n+3) td:first-child { color: #f87171; }
+  tbody tr:hover td { background: var(--surface2); }
+
+  /* ----- Transfer ----- */
+  #transfer .transfer-layout { gap: 18px !important; }
+  #transfer .transfer-layout > div { min-width: 0; }
+  #buyList > div[style*="background:#0f3460"], #sellList > div[style*="background:#0f3460"] {
+    background: var(--surface) !important; border: 1px solid var(--border) !important; border-radius: 14px !important; }
+  #buyList > div[style*="background:#0f3460"]:hover { background: var(--surface2) !important; }
+  input[type="text"], select { background: var(--surface) !important; color: var(--text) !important; border: 1px solid var(--border) !important; border-radius: 12px !important; padding: 11px 14px !important; font-family: inherit; outline: none; }
+  input[type="text"]:focus, select:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 3px rgba(233,69,96,0.2); }
+  select option { background: #12142a; color: var(--text); }
+
+  /* ----- Kadro, ipuçları, müze, kupa, canlı alan ----- */
+  .hint-box { background: rgba(251,191,36,0.07) !important; border: 1px solid rgba(251,191,36,0.2); border-left: 3px solid var(--gold) !important; border-radius: 12px !important; color: #e5e7f0; }
+  .team-power { color: var(--gold) !important; }
+  .bench-item { background: var(--surface) !important; border: 1px solid var(--border) !important; border-radius: 12px !important; }
+  .bench-item:hover { border-color: var(--green) !important; background: var(--surface2) !important; }
+  .drag-pitch, .pitch-container { border-radius: 16px !important; box-shadow: var(--shadow); }
+  .cabinet-card { background: var(--surface) !important; border: 1px solid var(--border); border-radius: 14px !important; }
+  .trophy { background: linear-gradient(160deg, rgba(251,191,36,0.14), rgba(255,255,255,0.03)) !important; border-radius: 16px !important; }
+  #cupCalendar { background: var(--surface) !important; border: 1px solid var(--border); border-radius: 16px !important; }
+  #fixtureInfo { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; color: var(--text) !important; line-height: 1.6; }
+  .scoreboard { background: linear-gradient(135deg, #12142a, #1a1d3a) !important; border: 1px solid var(--border) !important; border-radius: 16px !important; box-shadow: var(--shadow); }
+  .event-feed { background: var(--surface) !important; border: 1px solid var(--border); border-radius: 14px !important; }
+  .match-row { border-bottom: 1px solid var(--border) !important; }
+
+  /* ----- Kaydırma çubuğu ----- */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+
+  @media (max-width: 560px) {
+    body { padding: 14px 12px 32px !important; }
+    .menu-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    button.menu-card { min-height: 118px; padding: 14px !important; }
+    .panel { padding: 16px !important; }
+    .team-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .bench-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  }
+
+  /* ===== FİKSTÜR LİSTESİ ===== */
+  :root { --c-lig: #60a5fa; --c-cup: #34d399; --c-sc: #fbbf24; }
+  .fx-legend { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 14px; }
+  .fx-chip { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); }
+  .fx-chip i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .fx-list { position: relative; max-height: 520px; overflow-y: auto; padding-right: 4px; margin-bottom: 14px; }
+  .fx-row { display: flex; align-items: center; gap: 12px; padding: 11px 14px; margin: 6px 0; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); border-left: 5px solid var(--fc); }
+  .fx-lig { --fc: var(--c-lig); --fbg: rgba(96,165,250,0.10); }
+  .fx-cup { --fc: var(--c-cup); --fbg: rgba(52,211,153,0.10); }
+  .fx-sc  { --fc: var(--c-sc);  --fbg: rgba(251,191,36,0.12); }
+  .fx-row { background: linear-gradient(90deg, var(--fbg), var(--surface) 60%); }
+  .fx-badge { flex: 0 0 auto; min-width: 74px; text-align: center; font-size: 10px; font-weight: 800; letter-spacing: 0.06em; padding: 5px 8px; border-radius: 8px; color: #0b0d1a; background: var(--fc); }
+  .fx-main { flex: 1; min-width: 0; }
+  .fx-lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .fx-teams { font-size: 14px; margin-top: 2px; }
+  .fx-teams .fx-note { color: var(--muted); font-style: italic; }
+  .fx-me { color: var(--gold); }
+  .fx-res { flex: 0 0 auto; text-align: right; }
+  .fx-score { font-weight: 800; font-size: 15px; color: var(--muted); white-space: nowrap; }
+  .fx-score.w { color: var(--green); } .fx-score.d { color: var(--gold); } .fx-score.l { color: #f87171; }
+  .fx-row.played { opacity: 0.72; }
+  .fx-row.next { opacity: 1; box-shadow: 0 0 0 2px var(--fc), 0 8px 24px rgba(0,0,0,0.4); }
+  .fx-row.next .fx-lbl { color: var(--fc); font-weight: 800; }
+  @media (max-width: 560px) { .fx-badge { min-width: 58px; font-size: 9px; } .fx-teams { font-size: 13px; } }
+
+  /* ===== TEKNİK DİREKTÖR ===== */
+  .coach-current { display: flex; align-items: center; gap: 14px; padding: 14px 16px; margin: 6px 0 16px; border-radius: 16px; background: linear-gradient(135deg, rgba(249,115,22,0.16), var(--surface)); border: 1px solid rgba(249,115,22,0.4); }
+  .coach-current .cc-ic { font-size: 30px; }
+  .coach-card { display: flex; align-items: center; gap: 14px; padding: 14px 16px; margin: 8px 0; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); }
+  .coach-card.owned { border-color: rgba(52,211,153,0.6); background: linear-gradient(90deg, rgba(52,211,153,0.12), var(--surface)); }
+  .coach-rank { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; background: var(--surface2); color: var(--muted); }
+  .coach-card:nth-child(2) .coach-rank { background: #fbbf24; color: #1a1200; }
+  .coach-pow { flex: 0 0 auto; width: 54px; height: 54px; border-radius: 14px; display: grid; place-items: center; font-size: 22px; font-weight: 900; color: #fff; background: linear-gradient(135deg, #f97316, #e94560); box-shadow: 0 6px 18px rgba(249,115,22,0.35); }
+  .coach-info { flex: 1; min-width: 0; }
+  .coach-name { font-weight: 800; font-size: 15px; }
+  .coach-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .coach-price { color: var(--green); font-weight: 800; white-space: nowrap; margin-right: 6px; }
+  @media (max-width: 560px) { .coach-card { flex-wrap: wrap; } .coach-info { flex-basis: 60%; } }
+  /* ===== ZORLUK SEÇİMİ ===== */
+  .diff-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 10px 0 20px; }
+  .diff-card { border: 2px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 14px; cursor: pointer; background: rgba(255,255,255,0.03); transition: all .15s; }
+  .diff-card:hover { transform: translateY(-2px); border-color: var(--dc); }
+  .diff-card.active { border-color: var(--dc); background: color-mix(in srgb, var(--dc) 16%, transparent); box-shadow: 0 0 0 1px var(--dc), 0 8px 22px rgba(0,0,0,0.35); }
+  .diff-card.locked { cursor: not-allowed; opacity: .4; transform: none; }
+  .diff-card.active.locked { opacity: 1; cursor: default; }
+  .diff-card .dc-t { font-size: 18px; font-weight: 800; color: var(--dc); }
+  .diff-card .dc-d { font-size: 12px; color: #aaa; margin: 2px 0 10px; }
+  .diff-card .dc-r { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; padding: 4px 0; border-top: 1px solid rgba(255,255,255,0.07); }
+  .diff-card .dc-r b { color: #4ade80; text-align: right; }
+  .diff-card .dc-r b.bad { color: #f87171; }
+  @media (max-width: 560px) { .diff-row { grid-template-columns: 1fr; } }
+  /* ===== COIN ===== */
+  .coin, #topBar > span b.coin { color: #fbbf24 !important; font-weight: 800 !important; }
+  .coin-packs { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin: 10px 0 20px; }
+  .coin-pack { border: 1px solid rgba(251,191,36,0.35); border-radius: 14px; padding: 14px 10px; text-align: center; background: linear-gradient(160deg, rgba(251,191,36,0.14), rgba(255,255,255,0.03)); }
+  .coin-pack .cp-n { font-size: 22px; font-weight: 800; color: #fbbf24; }
+  .coin-pack .cp-p { font-size: 13px; color: #4ade80; margin: 4px 0 6px; }
+  .coin-pack button { width: calc(100% - 10px); margin: 0; padding: 8px 10px; }
+  .up-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; margin: 6px 0; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; flex-wrap: wrap; }
+  .up-row .up-l { display: flex; align-items: center; gap: 10px; }
+  .up-row .up-r { display: flex; align-items: center; gap: 10px; }
+  .up-badge { width: 38px; height: 38px; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 15px; flex: none; }
+  .up-row .up-n { font-weight: bold; font-size: 14px; }
+  .up-row .up-s { font-size: 11px; color: #aaa; margin-top: 2px; }
+  .up-row button { margin: 0; padding: 7px 14px; font-weight: bold; }
+  .up-ok { color: #4ade80; font-size: 11px; font-weight: bold; }
+  /* ===== TAKIM LOGOLARI ===== */
+  .tn { display: inline-flex; align-items: center; gap: 7px; vertical-align: middle; }
+  .crest { flex: none; display: inline-block; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); object-fit: contain; }
+  .team-btn .crest { margin-bottom: 2px; }
+  .scoreboard .tn { gap: 8px; }
+
+  /* ===== STADYUM ARKA PLANI ===== */
+  #bgFx { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: linear-gradient(180deg, #05060f 0%, #0a1024 45%, #08150f 100%); }
+  #bgFx .bg-glow { position: absolute; left: 50%; top: 38%; width: 120vmax; height: 60vmax; transform: translate(-50%, -50%); background: radial-gradient(closest-side, rgba(52,211,153,0.16), transparent 70%); }
+  #bgFx .bg-pitch { position: absolute; left: -60%; width: 220%; bottom: -8%; height: 90%; transform-origin: 50% 100%; transform: perspective(640px) rotateX(52deg);
+    background: repeating-linear-gradient(90deg, rgba(52,140,98,0.85) 0 90px, rgba(36,108,76,0.85) 90px 180px);
+    -webkit-mask-image: linear-gradient(to top, #000 35%, transparent 98%); mask-image: linear-gradient(to top, #000 35%, transparent 98%); }
+  #bgFx .bg-pitch::before { content: ''; position: absolute; inset: 6% 12%; border: 3px solid rgba(255,255,255,0.4); }
+  #bgFx .bg-pitch::after { content: ''; position: absolute; left: 50%; top: 6%; bottom: 6%; width: 3px; background: rgba(255,255,255,0.28); transform: translateX(-50%); }
+  #bgFx .bg-circle { position: absolute; left: 50%; top: 50%; width: 22%; aspect-ratio: 1; border: 3px solid rgba(255,255,255,0.28); border-radius: 50%; transform: translate(-50%, -50%); }
+  #bgFx .beam { position: absolute; top: -8%; width: 46vw; height: 105vh; opacity: 0.55; transform-origin: 50% 0;
+    background: linear-gradient(180deg, rgba(255,255,235,0.30), rgba(255,255,235,0.06) 55%, transparent 85%);
+    animation: beamSway 9s ease-in-out infinite alternate; }
+  #bgFx .beam.l { left: -6vw; clip-path: polygon(46% 0, 54% 0, 100% 100%, 0 100%); }
+  #bgFx .beam.r { right: -6vw; clip-path: polygon(46% 0, 54% 0, 100% 100%, 0 100%); animation-delay: -4s; animation-direction: alternate-reverse; }
+  #bgFx .lamp { position: absolute; top: -30px; width: 90px; height: 90px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,240,0.9), rgba(255,255,220,0.25) 40%, transparent 70%); animation: lampPulse 4s ease-in-out infinite; }
+  #bgFx .lamp.l { left: 8vw; } #bgFx .lamp.r { right: 8vw; animation-delay: -2s; }
+  #bgFx .dust { position: absolute; bottom: -10px; width: 4px; height: 4px; border-radius: 50%; background: rgba(255,255,255,0.55); animation: dustUp linear infinite; }
+  #bgFx .vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 45%, transparent 35%, rgba(3,4,10,0.6) 100%), linear-gradient(180deg, rgba(5,6,15,0.25), rgba(5,6,15,0.05) 45%, rgba(5,6,15,0.2)); }
+  @keyframes beamSway { from { transform: rotate(-4deg); } to { transform: rotate(4deg); } }
+  @keyframes lampPulse { 0%, 100% { opacity: 0.75; transform: scale(0.95); } 50% { opacity: 1; transform: scale(1.1); } }
+  @keyframes dustUp { 0% { transform: translateY(0) translateX(0); opacity: 0; } 15% { opacity: 0.8; } 100% { transform: translateY(-95vh) translateX(var(--dx, 20px)); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { #bgFx *, #bgFx { animation: none !important; } }
+  @media (max-width: 560px) { #bgFx .beam { width: 70vw; } #bgFx .lamp { width: 60px; height: 60px; } }
+
+  /* ===== MÜZİK KONTROLÜ ===== */
+  #musicCtl { position: fixed; right: 14px; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); z-index: 9000; display: flex; align-items: center; gap: 8px;
+    padding: 6px 8px 6px 6px; border-radius: 999px; background: rgba(13,15,31,0.72); border: 1px solid rgba(255,255,255,0.12);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 8px 24px rgba(0,0,0,0.45); user-select: none; }
+  #musicBtn { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-size: 18px; cursor: pointer;
+    background: linear-gradient(135deg, #e94560, #ff7a59); box-shadow: 0 4px 14px rgba(233,69,96,0.45); transition: transform 0.15s, filter 0.2s; }
+  #musicBtn:hover { transform: scale(1.07); }
+  #musicBtn:active { transform: scale(0.94); }
+  #musicCtl.off #musicBtn { background: rgba(255,255,255,0.12); box-shadow: none; filter: grayscale(0.6); }
+  #musicCtl.playing:not(.off) #musicBtn { animation: musicBeat 0.625s ease-in-out infinite; }
+  @keyframes musicBeat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+  #musicVol { -webkit-appearance: none; appearance: none; width: 84px; height: 4px; border-radius: 4px; background: rgba(255,255,255,0.2); outline: none; cursor: pointer; }
+  #musicVol::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.5); }
+  #musicVol::-moz-range-thumb { width: 14px; height: 14px; border: none; border-radius: 50%; background: #fff; }
+  #musicCtl.off #musicVol { opacity: 0.35; }
+  @media (max-width: 560px) { #musicVol { display: none; } #musicCtl { padding: 5px; } }
+  @media (prefers-reduced-motion: reduce) { #musicCtl.playing #musicBtn { animation: none !important; } }
+
+  /* ===== BAŞLANGIÇ EKRANI ===== */
+  body.on-start > *:not(#bgFx):not(#startScreen):not(#musicCtl):not(#splash):not(script) { visibility: hidden; }
+  #startScreen { position: fixed; inset: 0; z-index: 8500; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+    padding: calc(24px + env(safe-area-inset-top, 0px)) 20px calc(86px + env(safe-area-inset-bottom, 0px)); overflow-y: auto;
+    background: radial-gradient(ellipse at 50% 38%, rgba(5,6,15,0.05) 0%, rgba(5,6,15,0.55) 100%); transition: opacity 0.45s ease, transform 0.45s ease; }
+  #startScreen.leaving { opacity: 0; transform: scale(1.04); pointer-events: none; }
+  #startScreen.gone { display: none; }
+  #startScreen > * { opacity: 0; animation: stIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+  #startScreen > :nth-child(1) { animation-delay: 0.1s; } #startScreen > :nth-child(2) { animation-delay: 0.2s; }
+  #startScreen > :nth-child(3) { animation-delay: 0.35s; } #startScreen > :nth-child(4) { animation-delay: 0.5s; }
+  #startScreen > :nth-child(5) { animation-delay: 0.65s; } #startScreen > :nth-child(6) { animation-delay: 0.8s; }
+  @keyframes stIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+  .st-studio { font-size: 11px; letter-spacing: 0.5em; padding-left: 0.5em; color: var(--muted); text-transform: uppercase; }
+  .st-ball { font-size: clamp(54px, 13vw, 84px); line-height: 1; margin: 14px 0 4px; filter: drop-shadow(0 14px 18px rgba(0,0,0,0.6)); animation: stIn 0.8s 0.2s cubic-bezier(0.2,0.8,0.2,1) forwards, ballBounce 2.2s 1s ease-in-out infinite !important; }
+  @keyframes ballBounce { 0%, 100% { transform: translateY(0) rotate(0); } 45% { transform: translateY(-16px) rotate(180deg); } 50% { transform: translateY(-16px) rotate(185deg); } 90% { transform: translateY(0) rotate(360deg); } }
+  .st-title { font-size: clamp(40px, 11vw, 92px); font-weight: 900; line-height: 0.95; letter-spacing: 0.04em; color: #fff;
+    text-shadow: 0 0 34px rgba(233,69,96,0.55), 0 6px 24px rgba(0,0,0,0.6); }
+  .st-title em { font-style: normal; background: linear-gradient(135deg, #e94560, #ff7a59 60%, #fbbf24); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; }
+  .st-title b { display: inline-block; margin-left: 0.12em; padding: 0.02em 0.22em; font-size: 0.55em; vertical-align: middle; border-radius: 0.28em; color: #0b0d1a; background: var(--gold); text-shadow: none; transform: rotate(-4deg); }
+  .st-sub { margin-top: 12px; font-size: clamp(11px, 3vw, 14px); letter-spacing: 0.32em; padding-left: 0.32em; text-transform: uppercase; color: #b7bcd3; }
+  .st-actions { width: min(380px, 100%); margin-top: 34px; display: flex; flex-direction: column; gap: 12px; }
+  .st-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 54px; padding: 12px 20px; border-radius: 16px; cursor: pointer; font-weight: 800; font-size: 16px; color: var(--text);
+    background: var(--surface2); border: 1px solid var(--border); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); transition: transform 0.15s, box-shadow 0.2s, background 0.2s; user-select: none; outline: none; }
+  .st-btn:hover, .st-btn:focus-visible { transform: translateY(-2px); background: rgba(255,255,255,0.14); }
+  .st-btn:active { transform: scale(0.98); }
+  .st-btn.primary { min-height: 64px; font-size: 19px; letter-spacing: 0.04em; border: none; background: linear-gradient(135deg, var(--accent), var(--accent2)); box-shadow: 0 12px 34px rgba(233,69,96,0.5); animation: stPulse 2.4s ease-in-out infinite; }
+  .st-btn.primary:hover, .st-btn.primary:focus-visible { background: linear-gradient(135deg, #f0546e, #ff8a6b); box-shadow: 0 16px 42px rgba(233,69,96,0.65); }
+  @keyframes stPulse { 0%, 100% { box-shadow: 0 12px 34px rgba(233,69,96,0.45); } 50% { box-shadow: 0 12px 46px rgba(233,69,96,0.8); } }
+  .st-btn small { font-size: 12px; font-weight: 600; opacity: 0.9; display: flex; align-items: center; gap: 6px; }
+  .st-btn.danger { color: #fca5a5; border-color: rgba(248,113,113,0.35); background: rgba(239,68,68,0.1); }
+  .st-howto { width: min(460px, 100%); max-height: 0; overflow: hidden; margin-top: 0; text-align: left; border-radius: 16px; background: var(--surface); border: 1px solid transparent; transition: max-height 0.4s ease, margin 0.3s, border-color 0.3s; }
+  .st-howto.open { max-height: 420px; margin-top: 16px; border-color: var(--border); }
+  .st-howto ul { list-style: none; margin: 0; padding: 14px 16px; display: grid; gap: 10px; }
+  .st-howto li { font-size: 13px; line-height: 1.45; color: #d6d9e8; display: flex; gap: 10px; }
+  .st-howto li span { flex: 0 0 auto; width: 26px; text-align: center; }
+  .st-howto li b { color: var(--text); }
+  #startScreen .hidden { display: none !important; }
+  .st-howto { background: transparent; }
+  .st-howto.open { background: var(--surface); }
+  .st-foot { margin-top: 26px; font-size: 11px; color: #6b7090; letter-spacing: 0.14em; }
+  .app-header { cursor: pointer; }
+  @media (max-height: 640px) { .st-ball { display: none; } .st-actions { margin-top: 20px; } }
+  @media (prefers-reduced-motion: reduce) { #startScreen > *, .st-ball, .st-btn.primary { animation: none !important; opacity: 1; } }
+</style>
+</head>
+<body class="on-start">
+<div id="bgFx" aria-hidden="true">
+  <div class="bg-glow"></div>
+  <div class="bg-pitch"><div class="bg-circle"></div></div>
+  <div class="beam l"></div><div class="beam r"></div>
+  <div class="lamp l"></div><div class="lamp r"></div>
+  <div class="vignette"></div>
+</div>
+<script>
+(function () {
+  var fx = document.getElementById('bgFx'), vg = fx.querySelector('.vignette');
+  for (var i = 0; i < 22; i++) {
+    var d = document.createElement('i'); d.className = 'dust';
+    d.style.left = (Math.random() * 100) + 'vw';
+    d.style.animationDuration = (9 + Math.random() * 12) + 's';
+    d.style.animationDelay = (-Math.random() * 20) + 's';
+    d.style.setProperty('--dx', (Math.random() * 80 - 40) + 'px');
+    var s = 2 + Math.random() * 3; d.style.width = d.style.height = s + 'px';
+    fx.insertBefore(d, vg);
+  }
+})();
+</script>
+
+<div id="splash" onclick="closeSplash()">
+  <div class="glow"></div>
+  <div class="logo">A<span>T</span>D</div>
+  <div class="line"></div>
+  <div class="studio">STUDIO</div>
+  <div class="loader"><i></i></div>
+  <div class="tap">GEÇMEK İÇİN DOKUN</div>
+</div>
+
+
+<div class="app-header">
+  <div class="app-logo">⚽</div>
+  <div>
+    <h1 class="app-title">Pro Manager 27</h1>
+    <div class="app-sub">Kariyer 2026-27 · ATD Studio</div>
+  </div>
+</div>
+
+<div id="topBar">
+  <span>Takım<b id="selectedTeamLabel" style="color:#e94560;">— seçilmedi —</b></span>
+  <span>Bütçe<b class="budget" id="budgetLabel">—</b></span>
+  <span>Coin<b class="coin" id="coinLabel">—</b></span>
+  <span id="teamPoints" style="color:#aaa;"></span>
+  <span id="weekLabel" style="color:#aaa;"></span>
+</div>
+
+<div id="menu" class="panel">
+  <h2>Ana Menü</h2>
+  <div class="menu-grid">
+    <button class="menu-card" id="selectTeamBtn" style="--c:#e94560" onclick="showScreen('teamSelect')"><span class="mc-ic">🛡️</span><span class="mc-t">Takım Seç</span><span class="mc-d">Kulübünü belirle</span></button>
+    <button class="menu-card" style="--c:#3b82f6" onclick="openMyTeam()"><span class="mc-ic">👕</span><span class="mc-t">Kadro Yönetimi</span><span class="mc-d">İlk 11 ve taktik</span></button>
+    <button class="menu-card" style="--c:#f97316" onclick="showScreen('coach')"><span class="mc-ic">🧠</span><span class="mc-t">Teknik Direktör</span><span class="mc-d">En iyi 5 hoca</span></button>
+    <button class="menu-card" style="--c:#10b981" onclick="showScreen('transfer')"><span class="mc-ic">💸</span><span class="mc-t">Transfer Pazarı</span><span class="mc-d">Al, sat, güçlen</span></button>
+    <button class="menu-card" style="--c:#fbbf24" onclick="openUpgrade()"><span class="mc-ic">🪙</span><span class="mc-t">Coin Mağazası</span><span class="mc-d">Oyuncu geliştir</span></button>
+    <button class="menu-card" style="--c:#f59e0b" onclick="showScreen('standings')"><span class="mc-ic">📊</span><span class="mc-t">Puan Durumu</span><span class="mc-d">Lig sıralaması</span></button>
+    <button class="menu-card" style="--c:#8b5cf6" onclick="showScreen('fixture')"><span class="mc-ic">📅</span><span class="mc-t">Fikstür</span><span class="mc-d">Lig &amp; kupa takvimi</span></button>
+    <button class="menu-card" style="--c:#06b6d4" onclick="showScreen('matchday')"><span class="mc-ic">⚽</span><span class="mc-t">Maç Günü</span><span class="mc-d">Maça çık</span></button>
+    <button class="menu-card" style="--c:#fbbf24" onclick="showScreen('museum')"><span class="mc-ic">🏛️</span><span class="mc-t">Müze</span><span class="mc-d">Kupa dolabın</span></button>
+    <button class="menu-card danger" onclick="openSlots()"><span class="mc-ic">💾</span><span class="mc-t">Kariyer Yuvaları</span><span class="mc-d">3 yuva · değiştir / yeni</span></button>
+  </div>
+</div>
+
+<div id="slots" class="panel hidden">
+  <h2>💾 Kariyer Yuvaları</h2>
+  <p style="color:var(--muted);">3 ayrı kariyer yürütebilirsin. Bir yuva seç: doluysa devam et, boşsa yeni kariyer başlat.</p>
+  <div id="slotGrid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:14px; margin:14px 0;"></div>
+  <div id="slotBank" class="hint-box"></div>
+  <button class="btn-back" onclick="showScreen('menu')" id="slotBack">Menüye Dön</button>
+</div>
+
+<div id="teamSelect" class="panel hidden">
+  <h2>Takım Seç</h2>
+  <p style="color:#f59e0b;">⚠️ Takım ve zorluk seçimi tek seferliktir! Seçtikten sonra değiştiremezsin.</p>
+  <h3 style="margin-bottom:0;">Zorluk Modu</h3>
+  <div class="diff-row" id="diffRow"></div>
+  <h3 style="margin-bottom:0;">Takımını Seç</h3>
+  <div id="bankBox" class="hint-box" style="margin:8px 0;"></div>
+  <div class="team-grid" id="teamGrid"></div>
+  <div id="confirmBar" style="position:sticky; bottom:12px; z-index:50; margin-top:16px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:12px 16px; border-radius:16px; background:rgba(13,15,31,0.88); border:1px solid var(--border); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); box-shadow:var(--shadow);">
+    <div id="confirmInfo" style="font-size:14px; color:var(--muted);">Bir takıma tıkla</div>
+    <button id="confirmBtn" type="button" onclick="confirmTeam()" disabled style="background:linear-gradient(135deg,var(--accent),var(--accent2)) !important; border:none !important; padding:12px 26px !important; font-size:15px;">İlerle ▶</button>
+  </div>
+  <button class="btn-back" onclick="showScreen('menu')">Menüye Dön</button>
+</div>
+
+<div id="standings" class="panel hidden">
+  <h2>Puan Durumu</h2>
+  <table id="standingsTable">
+    <thead><tr><th>#</th><th>Takım</th><th>O</th><th>G</th><th>B</th><th>M</th><th>Av</th><th>P</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <button class="btn-back" onclick="showScreen('menu')">Menüye Dön</button>
+</div>
+
+<div id="transfer" class="panel hidden">
+  <h2>Transfer Pazarı</h2>
+  <div style="margin:10px 0;">Bütçen: <b class="budget" id="transferBudget">—</b></div>
+  <div class="transfer-layout">
+    <div><h3>🛒 Oyuncu Al</h3><div id="buyList"></div></div>
+    <div><h3>💰 Oyuncu Sat</h3><div id="sellList"></div></div>
+  </div>
+  <button class="btn-back" onclick="showScreen('menu')">Menüye Dön</button>
+</div>
+
+<div id="fixture" class="panel hidden">
+  <h2>Fikstür</h2>
+  <div class="fx-legend">
+    <span class="fx-chip"><i style="background:var(--c-lig)"></i>Süper Lig</span>
+    <span class="fx-chip"><i style="background:var(--c-cup)"></i>Ziraat Türkiye Kupası</span>
+    <span class="fx-chip"><i style="background:var(--c-sc)"></i>Turkcell Süper Kupa</span>
+  </div>
+  <div id="fixtureList" class="fx-list"></div>
+  <button onclick="showScreen('matchday')">⚽ Maç Gününe Git</button>
+  <div id="cupCalendar" style="margin-top:20px; background:#0f3460; border-radius:10px; padding:15px;"></div>
+  <button class="btn-back" onclick="showScreen('menu')">Menüye Dön</button>
+</div>
+
+<div id="matchday" class="panel hidden">
+  <h2>Maç Günü</h2>
+  <div id="fixtureInfo" style="margin:10px 0; font-size:14px; color:#aaa;"></div>
+  <div id="simControls">
+    <button id="startBtn" onclick="startMyMatch()">⚽ Maçı Başlat</button>
+    <button class="btn-back" onclick="showScreen('menu')">Menüye Dön</button>
+  </div>
+  <div id="liveArea" style="margin-top:15px;"></div>
+</div>
+
+<div id="coach" class="panel hidden">
+  <h2>Teknik Direktör</h2>
+  <div style="margin:10px 0;">Bütçen: <b class="budget" id="coachBudget">—</b></div>
+  <div id="coachBody"></div>
+  <button class="btn-back" onclick="showScreen('menu')">Menüye Dön</button>
+</div>
+
+<div id="upgrade" class="panel hidden">
+  <h2>🪙 Coin Mağazası</h2>
+  <div style="margin:10px 0; display:flex; gap:24px; flex-wrap:wrap;">
+    <div>Coin: <b class="coin" id="upCoin">—</b></div>
+    <div>Bütçen: <b class="budget" id="upBudget">—</b></div>
+  </div>
+  <div class="hint-box">💡 Coin'i <b>kupa kazanarak</b> (Süper Lig, Ziraat Türkiye Kupası, Turkcell Süper Kupa) ya da <b>bütçenden para yatırarak</b> edinirsin. Coin ile oyuncularının rating'ini yükseltirsin.</div>
+  <h3>💳 Para Yatır</h3>
+  <div class="coin-packs" id="coinPacks"></div>
+  <h3>⬆️ Oyuncu Geliştir</h3>
+  <div id="upgradeList"></div>
+  <button class="btn-back" onclick="showScreen('menu')">Menüye Dön</button>
+</div>
+
+<div id="museum" class="panel hidden">
+  <h2>🏛️ Müze</h2>
+  <div id="museumBody"></div>
+  <button class="btn-back" onclick="showScreen('menu')">Menüye Dön</button>
+</div>
+
+<div id="squad" class="panel hidden">
+  <h2 id="squadTitle">Kadro Yönetimi</h2>
+  <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:center;">
+    <div>Takım Gücü: <span class="team-power" id="teamPower">—</span></div>
+    <div>Formasyon: <b id="currentFormation" style="color:#e94560;">4-4-2</b></div>
+    <button onclick="autoPickBest()">⚡ En İyi 11'i Otomatik Seç</button>
+    <button onclick="resetSquad()">🔄 Sıfırla</button>
+  </div>
+  <div class="formation-row" id="formationRow">
+    <button class="formation-btn" onclick="setFormation('4-4-2')">4-4-2</button>
+    <button class="formation-btn" onclick="setFormation('4-3-3')">4-3-3</button>
+    <button class="formation-btn" onclick="setFormation('3-5-2')">3-5-2</button>
+    <button class="formation-btn" onclick="setFormation('4-2-3-1')">4-2-3-1</button>
+  </div>
+  <div class="hint-box">💡 Sahadaki oyuncuları <b>fareyle sürükleyerek</b> yedeklerle veya birbirleriyle yer değiştir.</div>
+  <div id="tacBox" class="hint-box"></div>
+  <div class="drag-pitch" id="dragPitch"></div>
+  <h3>Yedekler (<span id="benchCount">0</span>)</h3>
+  <div class="bench-grid" id="benchGrid"></div>
+  <button class="btn-back" onclick="showScreen('menu')">Menüye Dön</button>
+</div>
+
+<script>
+// ============ SABİTLER ============
+const ROLE = {GK:[0,0],CB:[1,0],LB:[1,-1],RB:[1,1],CM:[2,0],LW:[2.6,-1],RW:[2.6,1],ST:[3,0]};
+const ROLE_TR = {GK:'KL',CB:'STP',LB:'SLB',RB:'SĞB',CM:'OS',LW:'SLK',RW:'SĞK',ST:'FW'};
+const LB_N = ["Jakobs","Oosterwolde","Rıdvan"];
+const RB_N = ["Singo","Boey","Semedo","Müldür"];
+const KIND_TXT = {penalty:' — penaltı', corner:' — kornerden', freekick:' — serbest vuruş'};
+const TAC_DEF = {m:'bal', pr:'mid', sp:'cross'};
+const SAVE_KEY = 'superlig_menajer_v4'; // eski tek kayıt (yuva 1'e taşınır)
+const SLOT_COUNT = 3;
+let activeSlot = null;
+const slotKey = n => SAVE_KEY + '_s' + n;
+
+// ============ ZORLUK MODLARI ============
+// bMul/bAdd: başlangıç bütçesi = takım bütçesi × bMul + bAdd
+// base/win/draw: lig maçı geliri | cup/cupL: kupa maçı (kazan/kaybet) | cupF/sc: Türkiye Kupası / Süper Kupa şampiyonluk ikramiyesi
+// prize: sezon sonu prim çarpanı | atk: senin takımının gol üretimi çarpanı | opp: rakibin gol üretimi çarpanı
+const DIFF = {
+  normal: { label: 'Normal', icon: '⚽', color: '#3b82f6', desc: 'Dengeli, klasik kariyer deneyimi.',
+    coin: 20, tc: { lig: 30, cup: 20, sc: 10 }, bMul: 1, bAdd: 0, base: 0.8, win: 1.5, draw: 0.6, cup: 1.2, cupL: 0.5, cupF: 8, sc: 3, prize: 1, atk: 1, opp: 1 },
+  hard: { label: 'Zor', icon: '🔥', color: '#e94560', desc: 'Daha çok para, ama rakipler çok daha tehlikeli.',
+    coin: 40, tc: { lig: 45, cup: 30, sc: 15 }, bMul: 2, bAdd: 10, base: 1.6, win: 3.0, draw: 1.2, cup: 2.4, cupL: 1.0, cupF: 16, sc: 6, prize: 2, atk: 0.9, opp: 1.15 }
+};
+let difficulty = 'normal';
+let coins = 0;
+// ===== 4 BÜYÜK KİLİDİ: kalıcı cüzdan (Yeni Oyun'da silinmez) =====
+const META_KEY = 'superlig_menajer_meta';
+const START_BANK = 0; // ilk açılışta cüzdandaki coin
+// Takım gücüne göre sıralı: güçlü takım = pahalı kilit
+const BIG4_COST = { 'Galatasaray': 75, 'Fenerbahçe': 60, 'Beşiktaş': 40, 'Trabzonspor': 30 };
+let meta = { bank: START_BANK, unlocked: [] };
+function loadMeta() { try { const m = JSON.parse(localStorage.getItem(META_KEY)); if (m) meta = { bank: +m.bank || 0, unlocked: m.unlocked || [] }; } catch (e) {} }
+function saveMeta() { try { localStorage.setItem(META_KEY, JSON.stringify(meta)); } catch (e) {} }
+function isLocked(name) { return BIG4_COST[name] !== undefined && !meta.unlocked.includes(name); }
+function unlockTeam(name) {
+  const cost = BIG4_COST[name]; if (cost === undefined || !isLocked(name)) return;
+  if (meta.bank < cost) { alert(`Yetersiz coin! ${name} için ${cost} 🪙 gerekli, cüzdanında ${meta.bank} 🪙 var.\n\nİpucu: Kupa kazan, Kariyer yuvasını silince kalan coin'ler cüzdanına eklenir.`); return; }
+  if (!confirm(`${name} kilidini ${cost} 🪙 karşılığında açmak istiyor musun?`)) return;
+  meta.bank -= cost; meta.unlocked.push(name); saveMeta();
+  renderTeamGrid();
+}
+// Para yatırma paketleri: bütçeden (M €) coin satın alınır
+const COIN_PACKS = [ { c: 5, cost: 10 }, { c: 10, cost: 19 }, { c: 25, cost: 45 } ];
+const MAX_RATING = 99;
+function upgradeCost(p) { return Math.max(2, Math.ceil((p.rating - 50) / 6)); }
+function addCoins(n) { coins += n; }
+function depositCoins(i) {
+  const pk = COIN_PACKS[i], me = LEAGUE.find(t => t.name === selectedTeam);
+  if (!pk || !me) return;
+  if (me.budget < pk.cost) { alert('Yetersiz bütçe! Gerekli: ' + pk.cost + 'M €'); return; }
+  if (!confirm(`${pk.cost}M € yatırıp ${pk.c} Coin almak istiyor musun?`)) return;
+  me.budget = +(me.budget - pk.cost).toFixed(1);
+  addCoins(pk.c);
+  renderUpgrade(); updateTopBar();
+}
+function upgradePlayer(idx) {
+  const p = SQUADS[selectedTeam][idx]; if (!p) return;
+  if (p.rating >= MAX_RATING) return;
+  const cost = upgradeCost(p);
+  if (coins < cost) { alert('Yetersiz coin! Gerekli: ' + cost + ' Coin'); return; }
+  coins -= cost; p.rating++; p.up = (p.up || 0) + 1;
+  const y = window.scrollY;
+  renderUpgrade(); updateTopBar();
+  window.scrollTo(0, y);
+}
+function openUpgrade() {
+  if (!selectedTeam) { alert('Önce takım seç!'); showScreen('teamSelect'); return; }
+  showScreen('upgrade');
+}
+function renderUpgrade() {
+  if (!selectedTeam) return;
+  const me = LEAGUE.find(t => t.name === selectedTeam);
+  document.getElementById('upCoin').textContent = coins + ' 🪙';
+  document.getElementById('upBudget').textContent = me.budget + 'M €';
+  document.getElementById('coinPacks').innerHTML = COIN_PACKS.map((pk, i) => `<div class="coin-pack"><div class="cp-n">🪙 ${pk.c} Coin</div><div class="cp-p">${pk.cost}M €</div><button onclick="depositCoins(${i})" ${me.budget < pk.cost ? 'disabled' : ''}>Yatır</button></div>`).join('');
+  const posColor = { GK: '#f59e0b', DF: '#3b82f6', MF: '#10b981', WG: '#8b5cf6', FW: '#e94560' };
+  const starters = starterIndices[selectedTeam] || [];
+  const list = SQUADS[selectedTeam].map((p, i) => ({ p, i })).sort((a, b) => b.p.rating - a.p.rating);
+  document.getElementById('upgradeList').innerHTML = list.map(({ p, i }) => {
+    const maxed = p.rating >= MAX_RATING, cost = upgradeCost(p), can = !maxed && coins >= cost;
+    return `<div class="up-row"><div class="up-l"><div class="up-badge" style="background:${posColor[p.pos] || '#555'}">${p.rating}</div><div><div class="up-n">${p.name}${starters.includes(i) ? ' <span class="up-ok">İLK 11</span>' : ''}${p.up ? ` <span class="up-ok">+${p.up}</span>` : ''}</div><div class="up-s">${ROLE_TR[p.role] || p.pos}${maxed ? '' : ` · ${p.rating} → ${p.rating + 1}`}</div></div></div><div class="up-r"><button onclick="upgradePlayer(${i})" ${can ? '' : 'disabled'}>${maxed ? 'Maksimum' : `⬆️ ${cost} 🪙`}</button></div></div>`;
+  }).join('');
+}
+function D() { return DIFF[difficulty] || DIFF.normal; }
+function startBudget(base, mode) { const d = DIFF[mode || difficulty] || DIFF.normal; return +(base * d.bMul + d.bAdd).toFixed(1); }
+function diffLamMul(x, y) { const d = D(); return x === selectedTeam ? d.atk : (y === selectedTeam ? d.opp : 1); }
+const fmtM = n => (+n.toFixed(1)) + 'M €';
+function renderDiff() {
+  const row = document.getElementById('diffRow'); if (!row) return;
+  row.innerHTML = Object.keys(DIFF).map(k => {
+    const d = DIFF[k], hard = k === 'hard';
+    const bud = d.bMul === 1 && !d.bAdd ? 'Takımın kendi bütçesi' : `Takım bütçesi ×${d.bMul} + ${d.bAdd}M €`;
+    return `<div class="diff-card ${difficulty === k ? 'active' : ''} ${teamLocked ? 'locked' : ''}" style="--dc:${d.color}" onclick="setDifficulty('${k}')">
+      <div class="dc-t">${d.icon} ${d.label}</div><div class="dc-d">${d.desc}</div>
+      <div class="dc-r"><span>💰 Başlangıç bütçesi</span><b>${bud}</b></div>
+      <div class="dc-r"><span>🏆 Galibiyet geliri</span><b>+${fmtM(d.base + d.win)}</b></div>
+      <div class="dc-r"><span>🤝 Beraberlik geliri</span><b>+${fmtM(d.base + d.draw)}</b></div>
+      <div class="dc-r"><span>🥇 Kupa şampiyonluğu</span><b>+${fmtM(d.cupF + d.cup)}</b></div>
+      <div class="dc-r"><span>🏅 Süper Kupa</span><b>+${fmtM(d.sc + d.cup)}</b></div>
+      <div class="dc-r"><span>🪙 Başlangıç coin</span><b style="color:#fbbf24;">${d.coin} Coin</b></div>
+      <div class="dc-r"><span>🪙 Kupa coin ödülü</span><b style="color:#fbbf24;">Lig +${d.tc.lig} · Kupa +${d.tc.cup} · SK +${d.tc.sc}</b></div>
+      <div class="dc-r"><span>📈 Sezon sonu primi</span><b>×${d.prize}</b></div>
+      <div class="dc-r"><span>⚔️ Maç zorluğu</span><b class="${hard ? 'bad' : ''}">${hard ? 'Rakipler güçlü, kazanmak zor' : 'Normal'}</b></div>
+    </div>`;
+  }).join('');
+}
+function setDifficulty(k) { if (teamLocked || !DIFF[k]) return; difficulty = k; renderTeamGrid(); }
+
+// ============ TAKIM LOGOLARI ============
+// Hazır rozetler kulüp renkleriyle çizilen özgün armalardır. Gerçek logo kullanmak istersen:
+//   LOGOS['Galatasaray'] = 'logolar/gs.png';   // dosya yolu ya da data:image/... adresi
+const LOGOS = {};
+const TEAM_STYLE = {
+  'Galatasaray':    { c1: '#e30613', c2: '#fdb913', tx: 'GS',  pat: 'half' },
+  'Fenerbahçe':     { c1: '#0a2a66', c2: '#fcd116', tx: 'FB',  pat: 'stripes' },
+  'Beşiktaş':       { c1: '#111111', c2: '#ffffff', tx: 'BJK', pat: 'stripes' },
+  'Trabzonspor':    { c1: '#7a1f3d', c2: '#00a3e0', tx: 'TS',  pat: 'half' },
+  'Başakşehir':     { c1: '#f26b21', c2: '#1c2b5a', tx: 'BŞK', pat: 'half' },
+  'Göztepe':        { c1: '#f6c500', c2: '#d71920', tx: 'GÖZ', pat: 'stripes' },
+  'Samsunspor':     { c1: '#d71920', c2: '#ffffff', tx: 'SAM', pat: 'band' },
+  'Kasımpaşa':      { c1: '#0a2a66', c2: '#ffffff', tx: 'KSM', pat: 'half' },
+  'Konyaspor':      { c1: '#0b8a42', c2: '#ffffff', tx: 'KON', pat: 'stripes' },
+  'Alanyaspor':     { c1: '#f58220', c2: '#0b8a42', tx: 'ALN', pat: 'half' },
+  'Rizespor':       { c1: '#0b8a42', c2: '#1b4fa0', tx: 'RZE', pat: 'half' },
+  'Gaziantep FK':   { c1: '#d71920', c2: '#111111', tx: 'GFK', pat: 'stripes' },
+  'Kocaelispor':    { c1: '#0b8a42', c2: '#111111', tx: 'KOC', pat: 'stripes' },
+  'Gençlerbirliği': { c1: '#d71920', c2: '#111111', tx: 'GB',  pat: 'half' },
+  'Eyüpspor':       { c1: '#f7d117', c2: '#5b2a86', tx: 'EYP', pat: 'half' },
+  'Erzurumspor FK': { c1: '#1b4fa0', c2: '#111111', tx: 'ERZ', pat: 'half' },
+  'Amed Sportif':   { c1: '#d71920', c2: '#0b8a42', tx: 'AMD', pat: 'band' },
+  'Çorum FK':       { c1: '#111111', c2: '#d71920', tx: 'ÇFK', pat: 'stripes' }
+};
+const SHIELD = 'M50 4 L92 16 V58 C92 88 70 108 50 116 C30 108 8 88 8 58 V16 Z';
+let _cid = 0;
+function crest(name, size = 24) {
+  if (LOGOS[name]) return `<img class="crest" src="${LOGOS[name]}" width="${size}" height="${size}" alt="">`;
+  const s = TEAM_STYLE[name] || { c1: '#475569', c2: '#94a3b8', tx: String(name).slice(0, 3).toUpperCase(), pat: 'half' };
+  const id = 'cr' + (++_cid);
+  let fill;
+  if (s.pat === 'stripes') fill = [0, 1, 2, 3, 4].map(i => `<rect x="${i * 20}" width="20" height="120" fill="${i % 2 ? s.c2 : s.c1}"/>`).join('');
+  else if (s.pat === 'band') fill = `<rect width="100" height="120" fill="${s.c1}"/><rect y="30" width="100" height="56" fill="${s.c2}"/>`;
+  else fill = `<rect width="50" height="120" fill="${s.c1}"/><rect x="50" width="50" height="120" fill="${s.c2}"/>`;
+  const fs = s.tx.length >= 3 ? 27 : 36;
+  return `<svg class="crest" width="${size}" height="${Math.round(size * 1.1)}" viewBox="0 0 100 120" aria-hidden="true"><defs><clipPath id="${id}"><path d="${SHIELD}"/></clipPath></defs><g clip-path="url(#${id})">${fill}</g><path d="${SHIELD}" fill="none" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><rect x="13" y="42" width="74" height="34" rx="9" fill="rgba(0,0,0,0.62)"/><text x="50" y="${Math.round(59 + fs * 0.35)}" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="${fs}" fill="#fff">${s.tx}</text></svg>`;
+}
+function tn(n, size = 20, bold = false) { return `<span class="tn"${bold ? ' style="font-weight:800"' : ''}>${crest(n, size)}<span>${n}</span></span>`; }
+
+const LEAGUE_BASE = [
+  { name: "Galatasaray", strength: 90, budget: 60 },
+  { name: "Fenerbahçe", strength: 88, budget: 55 },
+  { name: "Beşiktaş", strength: 84, budget: 35 },
+  { name: "Trabzonspor", strength: 83, budget: 30 },
+  { name: "Başakşehir", strength: 76, budget: 12 },
+  { name: "Göztepe", strength: 74, budget: 8 },
+  { name: "Samsunspor", strength: 72, budget: 6 },
+  { name: "Kasımpaşa", strength: 70, budget: 5 },
+  { name: "Konyaspor", strength: 69, budget: 4 },
+  { name: "Alanyaspor", strength: 68, budget: 4 },
+  { name: "Rizespor", strength: 68, budget: 4 },
+  { name: "Gaziantep FK", strength: 67, budget: 3 },
+  { name: "Kocaelispor", strength: 66, budget: 3 },
+  { name: "Gençlerbirliği", strength: 65, budget: 2 },
+  { name: "Eyüpspor", strength: 64, budget: 2 },
+  { name: "Erzurumspor FK", strength: 62, budget: 2 },
+  { name: "Amed Sportif", strength: 61, budget: 1 },
+  { name: "Çorum FK", strength: 60, budget: 1 }
+];
+
+// ===== DÖRT BÜYÜK KULÜP — TFF LİSTELERİ (tam rollerle, Vlahovic ve Leao çıkarıldı) =====
+const SQUADS_BASE = {
+  "Galatasaray": [
+    { name: "Uğurcan Çakır", pos: "GK", role: "GK", rating: 82 },
+    { name: "Günay Güvenç", pos: "GK", role: "GK", rating: 76 },
+    { name: "Jankat Yılmaz", pos: "GK", role: "GK", rating: 68 },
+    { name: "Davinson Sanchez", pos: "DF", role: "CB", rating: 84 },
+    { name: "Wilfried Singo", pos: "DF", role: "RB", rating: 83 },
+    { name: "Abdülkerim Bardakcı", pos: "DF", role: "CB", rating: 81 },
+    { name: "Ismail Jakobs", pos: "DF", role: "LB", rating: 78 },
+    { name: "Eren Elmalı", pos: "DF", role: "LB", rating: 76 },
+    { name: "Kaan Ayhan", pos: "DF", role: "CB", rating: 75 },
+    { name: "El Chadaille Bitshiabu", pos: "DF", role: "CB", rating: 74 },
+    { name: "Kazımcan Karataş", pos: "DF", role: "LB", rating: 72 },
+    { name: "Arda Ünyay", pos: "DF", role: "CB", rating: 68 },
+    { name: "Lucas Torreira", pos: "MF", role: "CM", rating: 82 },
+    { name: "Gabriel Sara", pos: "MF", role: "CM", rating: 83 },
+    { name: "Mario Lemina", pos: "MF", role: "CM", rating: 80 },
+    { name: "İlkay Gündoğan", pos: "MF", role: "CM", rating: 81 },
+    { name: "Lesley Ugochukwu", pos: "MF", role: "CM", rating: 78 },
+    { name: "Aleksey Batrakov", pos: "MF", role: "CM", rating: 84 },
+    { name: "Eyüp Aydın", pos: "MF", role: "CM", rating: 70 },
+    { name: "Berat Luş", pos: "MF", role: "CM", rating: 68 },
+    { name: "Renato Nhaga", pos: "MF", role: "CM", rating: 67 },
+    { name: "Victor Osimhen", pos: "FW", role: "ST", rating: 90 },
+    { name: "Deniz Gül", pos: "FW", role: "ST", rating: 78 },
+    { name: "Leroy Sane", pos: "WG", role: "LW", rating: 85 },
+    { name: "Barış Alper Yılmaz", pos: "WG", role: "RW", rating: 82 },
+    { name: "Yunus Akgün", pos: "WG", role: "RW", rating: 79 },
+    { name: "Roland Sallai", pos: "WG", role: "RW", rating: 78 }
+  ],
+  "Fenerbahçe": [
+    { name: "Ederson", pos: "GK", role: "GK", rating: 85 },
+    { name: "Mert Günok", pos: "GK", role: "GK", rating: 76 },
+    { name: "Tarık Çetin", pos: "GK", role: "GK", rating: 70 },
+    { name: "Milan Škriniar", pos: "DF", role: "CB", rating: 83 },
+    { name: "Nathan Aké", pos: "DF", role: "CB", rating: 81 },
+    { name: "Nélson Semedo", pos: "DF", role: "RB", rating: 79 },
+    { name: "Archie Brown", pos: "DF", role: "LB", rating: 77 },
+    { name: "Mert Müldür", pos: "DF", role: "RB", rating: 75 },
+    { name: "Ognjen Mimović", pos: "DF", role: "RB", rating: 72 },
+    { name: "Levent Mercan", pos: "DF", role: "LB", rating: 71 },
+    { name: "Çağrı Hakan Balta", pos: "DF", role: "CB", rating: 68 },
+    { name: "Yiğit Efe Demir", pos: "DF", role: "CB", rating: 67 },
+    { name: "Matteo Guendouzi", pos: "MF", role: "CM", rating: 83 },
+    { name: "N'Golo Kanté", pos: "MF", role: "CM", rating: 80 },
+    { name: "İsmail Yüksek", pos: "MF", role: "CM", rating: 77 },
+    { name: "İrfan Can Kahveci", pos: "MF", role: "CM", rating: 78 },
+    { name: "Mert Hakan Yandaş", pos: "MF", role: "CM", rating: 74 },
+    { name: "Bartuğ Elmaz", pos: "MF", role: "CM", rating: 70 },
+    { name: "Alaettin Ekici", pos: "MF", role: "CM", rating: 67 },
+    { name: "Kojo Peprah Oppong", pos: "MF", role: "CM", rating: 66 },
+    { name: "Romelu Lukaku", pos: "FW", role: "ST", rating: 86 },
+    { name: "Vedat Muriqi", pos: "FW", role: "ST", rating: 80 },
+    { name: "Ömer Yiğit Tiryakigil", pos: "FW", role: "ST", rating: 65 },
+    { name: "Mason Greenwood", pos: "WG", role: "RW", rating: 85 },
+    { name: "Marco Asensio", pos: "WG", role: "LW", rating: 84 },
+    { name: "Kerem Aktürkoğlu", pos: "WG", role: "LW", rating: 82 },
+    { name: "Dorgeles Nene", pos: "WG", role: "RW", rating: 79 },
+    { name: "Oğuz Aydın", pos: "WG", role: "RW", rating: 73 }
+  ],
+  "Beşiktaş": [
+    { name: "Alexander Nübel", pos: "GK", role: "GK", rating: 80 },
+    { name: "Doğan Alemdar", pos: "GK", role: "GK", rating: 72 },
+    { name: "Emir Yaşar", pos: "GK", role: "GK", rating: 68 },
+    { name: "Emmanuel Agbadou", pos: "DF", role: "CB", rating: 80 },
+    { name: "Amir Murillo", pos: "DF", role: "RB", rating: 79 },
+    { name: "Emirhan Topçu", pos: "DF", role: "CB", rating: 77 },
+    { name: "Tiago Djaló", pos: "DF", role: "CB", rating: 77 },
+    { name: "Rıdvan Yılmaz", pos: "DF", role: "LB", rating: 76 },
+    { name: "Yasin Özcan", pos: "DF", role: "LB", rating: 75 },
+    { name: "Taylan Bulut", pos: "DF", role: "RB", rating: 72 },
+    { name: "Ümit Akdağ", pos: "DF", role: "CB", rating: 70 },
+    { name: "Kassoum Ouattara", pos: "DF", role: "LB", rating: 73 },
+    { name: "Orkun Kökçü", pos: "MF", role: "CM", rating: 83 },
+    { name: "Wilfried Ndidi", pos: "MF", role: "CM", rating: 81 },
+    { name: "Salih Özcan", pos: "MF", role: "CM", rating: 78 },
+    { name: "Fabio Miretti", pos: "MF", role: "CM", rating: 77 },
+    { name: "Junior Olaitan", pos: "MF", role: "CM", rating: 76 },
+    { name: "Kartal Kayra Yılmaz", pos: "MF", role: "CM", rating: 70 },
+    { name: "İlhan Fakılı", pos: "MF", role: "CM", rating: 68 },
+    { name: "Semih Kılıçsoy", pos: "FW", role: "ST", rating: 78 },
+    { name: "Hyeongyu Oh", pos: "FW", role: "ST", rating: 75 },
+    { name: "Ahmet Sami Bircan", pos: "FW", role: "ST", rating: 65 },
+    { name: "Leandro Trossard", pos: "WG", role: "LW", rating: 84 },
+    { name: "Milot Rashica", pos: "WG", role: "RW", rating: 79 },
+    { name: "Vaclav Cerny", pos: "WG", role: "RW", rating: 77 },
+    { name: "Ernest Poku", pos: "WG", role: "RW", rating: 78 },
+    { name: "Can Keleş", pos: "WG", role: "LW", rating: 70 }
+  ],
+  "Trabzonspor": [
+    { name: "Andre Onana", pos: "GK", role: "GK", rating: 79 },
+    { name: "Onuralp Çevikkan", pos: "GK", role: "GK", rating: 72 },
+    { name: "Ahmet Doğan Yıldırım", pos: "GK", role: "GK", rating: 68 },
+    { name: "Stefan Savic", pos: "DF", role: "CB", rating: 78 },
+    { name: "Arseniy Batagov", pos: "DF", role: "CB", rating: 76 },
+    { name: "Samet Akaydın", pos: "DF", role: "CB", rating: 75 },
+    { name: "Cenk Özkaçar", pos: "DF", role: "CB", rating: 74 },
+    { name: "Chibuike Godfrey Nwaiwu", pos: "DF", role: "RB", rating: 74 },
+    { name: "Ali Habeşoğlu", pos: "DF", role: "LB", rating: 70 },
+    { name: "Metehan Mimaroğlu", pos: "DF", role: "LB", rating: 68 },
+    { name: "Oğuzhan Ertem", pos: "DF", role: "RB", rating: 67 },
+    { name: "Wagner Pina", pos: "DF", role: "CB", rating: 72 },
+    { name: "Ruslan Malinovskyi", pos: "MF", role: "CM", rating: 80 },
+    { name: "Okay Yokuşlu", pos: "MF", role: "CM", rating: 77 },
+    { name: "Ozan Tufan", pos: "MF", role: "CM", rating: 77 },
+    { name: "Bouchouari", pos: "MF", role: "CM", rating: 76 },
+    { name: "Fabio Henrique Tavares", pos: "MF", role: "CM", rating: 73 },
+    { name: "Cihan Çanak", pos: "MF", role: "CM", rating: 70 },
+    { name: "Melih Kabasakal", pos: "MF", role: "CM", rating: 68 },
+    { name: "Doğuhan Aral Şimşir", pos: "MF", role: "CM", rating: 67 },
+    { name: "Ebere Paul Onuachu", pos: "FW", role: "ST", rating: 83 },
+    { name: "Franculino Gluda Dju", pos: "FW", role: "ST", rating: 80 },
+    { name: "Mehmet Umut Nayir", pos: "FW", role: "ST", rating: 76 },
+    { name: "Ernest Muçi", pos: "WG", role: "LW", rating: 79 },
+    { name: "Noah Jose Saviolo", pos: "WG", role: "RW", rating: 78 },
+    { name: "Mustafa Eskihellaç", pos: "WG", role: "RW", rating: 72 },
+    { name: "Sidny Lopes Cabral", pos: "WG", role: "LW", rating: 71 },
+    { name: "Mohamed Salah", pos: "WG", role: "RW", rating: 84 }
+  ],
+  // ===== DİĞER 14 TAKIM — oyuncu listeleri (reytingler tahminidir) =====
+  "Başakşehir": [
+    { name: "Muhammed Şengezer", pos: "GK", role: "GK", rating: 74 },
+    { name: "Volkan Babacan", pos: "GK", role: "GK", rating: 72 },
+    { name: "Leo Duarte", pos: "DF", role: "CB", rating: 76 },
+    { name: "Ousseynou Ba", pos: "DF", role: "CB", rating: 74 },
+    { name: "Onur Bulut", pos: "DF", role: "RB", rating: 74 },
+    { name: "Ahmed Touba", pos: "DF", role: "LB", rating: 73 },
+    { name: "Christopher Operi", pos: "DF", role: "LB", rating: 72 },
+    { name: "Yasin Özcan Jr", pos: "DF", role: "CB", rating: 68 },
+    { name: "Olivier Kemen", pos: "MF", role: "CM", rating: 76 },
+    { name: "Berkay Özcan", pos: "MF", role: "CM", rating: 75 },
+    { name: "Amir Hadžiahmetović", pos: "MF", role: "CM", rating: 74 },
+    { name: "Miguel Crespo", pos: "MF", role: "CM", rating: 74 },
+    { name: "Ömer Ali Şahiner", pos: "MF", role: "CM", rating: 70 },
+    { name: "Deniz Türüç", pos: "WG", role: "LW", rating: 75 },
+    { name: "Amine Harit", pos: "WG", role: "LW", rating: 76 },
+    { name: "Yusuf Sarı", pos: "WG", role: "RW", rating: 73 },
+    { name: "Eldor Shomurodov", pos: "FW", role: "ST", rating: 77 },
+    { name: "Nuno da Costa", pos: "FW", role: "ST", rating: 74 },
+    { name: "Chadrac Akolo", pos: "FW", role: "ST", rating: 73 }
+  ],
+  "Göztepe": [
+    { name: "Mateusz Lis", pos: "GK", role: "GK", rating: 74 },
+    { name: "Ogün Bayrak", pos: "GK", role: "GK", rating: 70 },
+    { name: "Allan Godói", pos: "DF", role: "CB", rating: 72 },
+    { name: "Héliton", pos: "DF", role: "CB", rating: 72 },
+    { name: "Malcom Bokele", pos: "DF", role: "CB", rating: 73 },
+    { name: "Taha Altıkardeş", pos: "DF", role: "LB", rating: 71 },
+    { name: "Ismail Köybaşı", pos: "DF", role: "RB", rating: 71 },
+    { name: "Arda Okan Kurtulan", pos: "DF", role: "LB", rating: 70 },
+    { name: "Rômulo", pos: "MF", role: "CM", rating: 73 },
+    { name: "Novatus Miroshi", pos: "MF", role: "CM", rating: 74 },
+    { name: "Ahmed Ildız", pos: "MF", role: "CM", rating: 72 },
+    { name: "Efkan Bekiroğlu", pos: "MF", role: "CM", rating: 70 },
+    { name: "Tolga Çiğerci", pos: "MF", role: "CM", rating: 71 },
+    { name: "Juan", pos: "WG", role: "RW", rating: 73 },
+    { name: "Ogulcan Ülgün", pos: "WG", role: "LW", rating: 71 },
+    { name: "Janderson", pos: "FW", role: "ST", rating: 77 },
+    { name: "Efe Akman", pos: "FW", role: "ST", rating: 70 },
+    { name: "Ahmet Ağaoğlu", pos: "WG", role: "LW", rating: 69 }
+  ],
+  "Samsunspor": [
+    { name: "Okan Kocuk", pos: "GK", role: "GK", rating: 73 },
+    { name: "Ahmet Eyüp Türkaslan", pos: "GK", role: "GK", rating: 68 },
+    { name: "Rick van Drongelen", pos: "DF", role: "CB", rating: 74 },
+    { name: "Lubomir Šatka", pos: "DF", role: "CB", rating: 73 },
+    { name: "Zeki Çelik", pos: "DF", role: "RB", rating: 73 },
+    { name: "Yunus Emre Çift", pos: "DF", role: "LB", rating: 70 },
+    { name: "Soner Aydoğdu", pos: "MF", role: "CM", rating: 72 },
+    { name: "Olivier Ntcham", pos: "MF", role: "CM", rating: 74 },
+    { name: "Franco Tongya", pos: "MF", role: "CM", rating: 71 },
+    { name: "Tolga Ciğerci", pos: "MF", role: "CM", rating: 70 },
+    { name: "Carlo Holse", pos: "WG", role: "RW", rating: 76 },
+    { name: "Anthony Musaba", pos: "WG", role: "LW", rating: 75 },
+    { name: "Emre Kılınç", pos: "WG", role: "LW", rating: 72 },
+    { name: "Marius Mouandilmadji", pos: "FW", role: "ST", rating: 74 },
+    { name: "Polat Yaldır", pos: "FW", role: "ST", rating: 70 },
+    { name: "Antoine Makoumbou", pos: "MF", role: "CM", rating: 73 }
+  ],
+  "Kasımpaşa": [
+    { name: "Andreas Gianniotis", pos: "GK", role: "GK", rating: 72 },
+    { name: "Ali Emre Yanar", pos: "GK", role: "GK", rating: 66 },
+    { name: "Nicholas Opoku", pos: "DF", role: "CB", rating: 73 },
+    { name: "Pedro Pereira", pos: "DF", role: "RB", rating: 71 },
+    { name: "Attila Szalai", pos: "DF", role: "CB", rating: 72 },
+    { name: "Hamza Ahmed", pos: "DF", role: "LB", rating: 68 },
+    { name: "Haris Hajradinović", pos: "MF", role: "CM", rating: 72 },
+    { name: "Andri Baldursson", pos: "MF", role: "CM", rating: 71 },
+    { name: "Yusuf Barası", pos: "WG", role: "LW", rating: 70 },
+    { name: "Ben Brereton", pos: "FW", role: "ST", rating: 73 },
+    { name: "Mamadou Fall", pos: "DF", role: "CB", rating: 70 },
+    { name: "Ricardo Gomes", pos: "FW", role: "ST", rating: 70 },
+    { name: "Eren Aydın", pos: "MF", role: "CM", rating: 67 },
+    { name: "Tarık Yılmaz", pos: "WG", role: "LW", rating: 66 }
+  ],
+  "Konyaspor": [
+    { name: "Bahadır Güngördü", pos: "GK", role: "GK", rating: 71 },
+    { name: "Deniz Ertaş", pos: "GK", role: "GK", rating: 66 },
+    { name: "Adil Demirbağ", pos: "DF", role: "CB", rating: 70 },
+    { name: "Guilherme Sityá", pos: "DF", role: "CB", rating: 69 },
+    { name: "Riechedly Bazoer", pos: "DF", role: "CB", rating: 71 },
+    { name: "Josip Ćalušić", pos: "MF", role: "CM", rating: 73 },
+    { name: "Marko Jevtović", pos: "MF", role: "CM", rating: 73 },
+    { name: "Uğurcan Yazğılı", pos: "MF", role: "CM", rating: 69 },
+    { name: "Blaž Kramer", pos: "FW", role: "ST", rating: 72 },
+    { name: "Alassane Ndao", pos: "FW", role: "ST", rating: 70 },
+    { name: "Yasir Subaşı", pos: "WG", role: "RW", rating: 68 },
+    { name: "Melih Bostan", pos: "DF", role: "RB", rating: 68 },
+    { name: "Ruan", pos: "DF", role: "LB", rating: 69 },
+    { name: "Ugurcan Çakır Jr", pos: "WG", role: "LW", rating: 66 }
+  ],
+  "Alanyaspor": [
+    { name: "Mert Günok Jr", pos: "GK", role: "GK", rating: 68 },
+    { name: "Ricardo Velho", pos: "GK", role: "GK", rating: 70 },
+    { name: "Fidan Aliti", pos: "DF", role: "CB", rating: 71 },
+    { name: "Nuno Lima", pos: "DF", role: "CB", rating: 70 },
+    { name: "Ruan Aurélio", pos: "DF", role: "RB", rating: 69 },
+    { name: "Nicolas Janvier", pos: "DF", role: "LB", rating: 69 },
+    { name: "Efecan Karaca", pos: "MF", role: "CM", rating: 70 },
+    { name: "Ellyes Skhiri", pos: "MF", role: "CM", rating: 72 },
+    { name: "Hwang Ui-jo", pos: "FW", role: "ST", rating: 72 },
+    { name: "Güven Yalçın", pos: "FW", role: "ST", rating: 69 },
+    { name: "Ibrahima Sory Sow", pos: "WG", role: "LW", rating: 70 },
+    { name: "Mateus Lima", pos: "WG", role: "RW", rating: 70 },
+    { name: "Yusuf Özdemir", pos: "MF", role: "CM", rating: 67 },
+    { name: "Gaius Makouta", pos: "MF", role: "CM", rating: 68 }
+  ],
+  "Rizespor": [
+    { name: "Erdem Canpolat", pos: "GK", role: "GK", rating: 70 },
+    { name: "Ertuğrul Taşkıran", pos: "GK", role: "GK", rating: 66 },
+    { name: "Casper Hojer", pos: "DF", role: "CB", rating: 70 },
+    { name: "Modibo Sagnan", pos: "DF", role: "CB", rating: 71 },
+    { name: "Fode Koita", pos: "WG", role: "RW", rating: 70 },
+    { name: "Muhamed Bešić", pos: "MF", role: "CM", rating: 72 },
+    { name: "Sander Svendsen", pos: "FW", role: "ST", rating: 72 },
+    { name: "Emrecan Bulut", pos: "WG", role: "LW", rating: 69 },
+    { name: "Taylan Antalyalı", pos: "MF", role: "CM", rating: 72 },
+    { name: "Samet Akaydın Jr", pos: "DF", role: "CB", rating: 66 },
+    { name: "Mithat Pala", pos: "DF", role: "LB", rating: 68 },
+    { name: "Ali Sowe", pos: "FW", role: "ST", rating: 72 },
+    { name: "Yusuf Yazıcı", pos: "MF", role: "CM", rating: 73 },
+    { name: "Kıvanç Kızılaslan", pos: "DF", role: "RB", rating: 66 }
+  ],
+  "Gaziantep FK": [
+    { name: "Zafer Görgen", pos: "GK", role: "GK", rating: 68 },
+    { name: "Burak Bozan", pos: "GK", role: "GK", rating: 65 },
+    { name: "Arda Kızıldağ", pos: "DF", role: "CB", rating: 68 },
+    { name: "Kevin Rodrigues", pos: "DF", role: "LB", rating: 69 },
+    { name: "Myenty Abena", pos: "DF", role: "RB", rating: 68 },
+    { name: "Ismaila Soro", pos: "MF", role: "CM", rating: 69 },
+    { name: "Maxim Ricardo", pos: "MF", role: "CM", rating: 68 },
+    { name: "Papy Djilobodji", pos: "DF", role: "CB", rating: 67 },
+    { name: "Kacper Kozłowski", pos: "MF", role: "CM", rating: 70 },
+    { name: "Yusuf Abdioğlu", pos: "WG", role: "LW", rating: 69 },
+    { name: "Dennis Ayensa", pos: "FW", role: "ST", rating: 68 },
+    { name: "Nazım Sangaré", pos: "MF", role: "CM", rating: 69 },
+    { name: "Mustafa Eskihellaç Jr", pos: "FW", role: "ST", rating: 65 }
+  ],
+  "Kocaelispor": [
+    { name: "Ibrahim Sehić", pos: "GK", role: "GK", rating: 68 },
+    { name: "Serkan Kırıntılı", pos: "GK", role: "GK", rating: 64 },
+    { name: "Hrvoje Smolčić", pos: "DF", role: "CB", rating: 68 },
+    { name: "Mustafa Kapı", pos: "DF", role: "CB", rating: 67 },
+    { name: "Mevlüt Erdinç", pos: "FW", role: "ST", rating: 67 },
+    { name: "Burak Altıparmak", pos: "DF", role: "LB", rating: 66 },
+    { name: "Furkan Soyalp", pos: "MF", role: "CM", rating: 67 },
+    { name: "Yusuf Erdoğan", pos: "MF", role: "CM", rating: 66 },
+    { name: "Umutcan Gökçe", pos: "WG", role: "LW", rating: 66 },
+    { name: "Daniel Candeias", pos: "WG", role: "RW", rating: 68 },
+    { name: "Oğuz Ceylan", pos: "FW", role: "ST", rating: 65 },
+    { name: "Atakan Cangöz", pos: "MF", role: "CM", rating: 66 }
+  ],
+  "Gençlerbirliği": [
+    { name: "Ersin Destanoğlu", pos: "GK", role: "GK", rating: 70 },
+    { name: "Serhat Öztürk", pos: "GK", role: "GK", rating: 65 },
+    { name: "Ricardo Esgaio", pos: "DF", role: "RB", rating: 68 },
+    { name: "Mounir Chouiar", pos: "MF", role: "CM", rating: 68 },
+    { name: "Ahmet Kılıç", pos: "DF", role: "CB", rating: 66 },
+    { name: "Murat Sancak", pos: "DF", role: "CB", rating: 66 },
+    { name: "Jordy Bahunaj", pos: "DF", role: "LB", rating: 65 },
+    { name: "Josef Šural", pos: "WG", role: "LW", rating: 68 },
+    { name: "Erdem Atalay", pos: "MF", role: "CM", rating: 65 },
+    { name: "Bilal Ceylan", pos: "MF", role: "CM", rating: 65 },
+    { name: "Emirhan Kayar", pos: "WG", role: "RW", rating: 64 }
+  ],
+  "Eyüpspor": [
+    { name: "Marcelo Carvalho", pos: "GK", role: "GK", rating: 67 },
+    { name: "Arda Türkmen", pos: "GK", role: "GK", rating: 63 },
+    { name: "Furkan Gedik", pos: "DF", role: "CB", rating: 65 },
+    { name: "Mame Thiam", pos: "FW", role: "ST", rating: 70 },
+    { name: "Alper Potuk", pos: "MF", role: "CM", rating: 66 },
+    { name: "Ceyhun Gülselam", pos: "MF", role: "CM", rating: 65 },
+    { name: "Metehan Altunbaş", pos: "WG", role: "RW", rating: 66 },
+    { name: "Hamza Alaoui", pos: "WG", role: "LW", rating: 65 },
+    { name: "Jonathan Okoronkwo", pos: "FW", role: "ST", rating: 65 },
+    { name: "Berkay Aslan", pos: "DF", role: "LB", rating: 64 },
+    { name: "Yusuf Doğan", pos: "DF", role: "RB", rating: 64 },
+    { name: "Selçuk Özgül", pos: "MF", role: "CM", rating: 64 }
+  ],
+  "Erzurumspor FK": [
+    { name: "Alperen Uysal", pos: "GK", role: "GK", rating: 64 },
+    { name: "Ahmet Burak Dikel", pos: "GK", role: "GK", rating: 62 },
+    { name: "Selim Ay", pos: "DF", role: "CB", rating: 64 },
+    { name: "Berkant Gökhan", pos: "DF", role: "CB", rating: 63 },
+    { name: "Yasin Pehlivan", pos: "DF", role: "RB", rating: 63 },
+    { name: "Emre Taşdemir", pos: "DF", role: "LB", rating: 62 },
+    { name: "Ali Şaşal Vural", pos: "MF", role: "CM", rating: 64 },
+    { name: "Burak Öztürk", pos: "MF", role: "CM", rating: 63 },
+    { name: "Ensar Dedeoğlu", pos: "WG", role: "LW", rating: 63 },
+    { name: "Eren Aydın Jr", pos: "WG", role: "RW", rating: 62 },
+    { name: "Gökdeniz Bayrakdar", pos: "FW", role: "ST", rating: 62 },
+    { name: "Ömer Faruk Zengin", pos: "MF", role: "CM", rating: 61 }
+  ],
+  "Amed Sportif": [
+    { name: "Muhammed Emin", pos: "DF", role: "CB", rating: 62 },
+    { name: "Ramazan Kaya", pos: "DF", role: "CB", rating: 62 },
+    { name: "Eren Kaya", pos: "DF", role: "RB", rating: 61 },
+    { name: "Mehmet Kılıç", pos: "DF", role: "LB", rating: 61 },
+    { name: "Ferdi Ay", pos: "MF", role: "CM", rating: 62 },
+    { name: "Baran Duran", pos: "MF", role: "CM", rating: 61 },
+    { name: "Mazlum Demir", pos: "WG", role: "LW", rating: 61 },
+    { name: "Yusuf Bozkurt", pos: "WG", role: "RW", rating: 60 },
+    { name: "Kerem Şen", pos: "FW", role: "ST", rating: 62 },
+    { name: "Ahmet Kaplan", pos: "FW", role: "ST", rating: 60 }
+  ],
+  "Çorum FK": [
+    { name: "Mert Önder", pos: "GK", role: "GK", rating: 62 },
+    { name: "Ismail Yıldız", pos: "GK", role: "GK", rating: 60 },
+    { name: "Ali Rıza Bal", pos: "DF", role: "CB", rating: 62 },
+    { name: "Hasan Doğan", pos: "DF", role: "CB", rating: 61 },
+    { name: "Furkan Aksoy", pos: "DF", role: "RB", rating: 60 },
+    { name: "Cem Yıldız", pos: "DF", role: "LB", rating: 60 },
+    { name: "Onur Kıvrak", pos: "MF", role: "CM", rating: 61 },
+    { name: "Serdar Aydın", pos: "MF", role: "CM", rating: 61 },
+    { name: "Burak Kurt", pos: "WG", role: "LW", rating: 60 },
+    { name: "Emre Uysal", pos: "WG", role: "RW", rating: 60 },
+    { name: "Oğuzhan Çelik", pos: "FW", role: "ST", rating: 61 },
+    { name: "Yiğit Kara", pos: "FW", role: "ST", rating: 60 }
+  ]
+};
+
+// ===== AVRUPA YILDIZLARI (transfer pazarı için — Vlahovic ve Leao çıkarıldı) =====
+const EURO_STARS = [
+  { name: "Kylian Mbappé", pos: "FW", role: "ST", rating: 91, club: "Real Madrid", country: "Fransa", price: 180 },
+  { name: "Erling Haaland", pos: "FW", role: "ST", rating: 91, club: "Man City", country: "Norveç", price: 175 },
+  { name: "Harry Kane", pos: "FW", role: "ST", rating: 90, club: "Bayern Münih", country: "İngiltere", price: 90 },
+  { name: "Lautaro Martínez", pos: "FW", role: "ST", rating: 88, club: "Inter", country: "Arjantin", price: 100 },
+  { name: "Victor Gyökeres", pos: "FW", role: "ST", rating: 87, club: "Arsenal", country: "İsveç", price: 90 },
+  { name: "Alexander Isak", pos: "FW", role: "ST", rating: 87, club: "Liverpool", country: "İsveç", price: 120 },
+  { name: "Ollie Watkins", pos: "FW", role: "ST", rating: 84, club: "Aston Villa", country: "İngiltere", price: 50 },
+  { name: "Rasmus Højlund", pos: "FW", role: "ST", rating: 82, club: "Napoli", country: "Danimarka", price: 45 },
+  { name: "Benjamin Šeško", pos: "FW", role: "ST", rating: 82, club: "Man United", country: "Slovenya", price: 50 },
+  { name: "Lamine Yamal", pos: "WG", role: "RW", rating: 90, club: "Barcelona", country: "İspanya", price: 200 },
+  { name: "Vinícius Jr", pos: "WG", role: "LW", rating: 91, club: "Real Madrid", country: "Brezilya", price: 180 },
+  { name: "Michael Olise", pos: "WG", role: "RW", rating: 87, club: "Bayern Münih", country: "Fransa", price: 100 },
+  { name: "Bukayo Saka", pos: "WG", role: "RW", rating: 88, club: "Arsenal", country: "İngiltere", price: 130 },
+  { name: "Nico Williams", pos: "WG", role: "LW", rating: 86, club: "Athletic Bilbao", country: "İspanya", price: 80 },
+  { name: "Jamal Musiala", pos: "WG", role: "LW", rating: 88, club: "Bayern Münih", country: "Almanya", price: 130 },
+  { name: "Florian Wirtz", pos: "WG", role: "LW", rating: 88, club: "Liverpool", country: "Almanya", price: 130 },
+  { name: "Khvicha Kvaratskhelia", pos: "WG", role: "LW", rating: 87, club: "PSG", country: "Gürcistan", price: 90 },
+  { name: "Rodrygo", pos: "WG", role: "RW", rating: 86, club: "Real Madrid", country: "Brezilya", price: 80 },
+  { name: "Desire Doue", pos: "WG", role: "RW", rating: 84, club: "PSG", country: "Fransa", price: 60 },
+  { name: "Dodi Lukebakio", pos: "WG", role: "RW", rating: 82, club: "Sevilla", country: "Belçika", price: 35 },
+  { name: "Cody Gakpo", pos: "WG", role: "LW", rating: 84, club: "Liverpool", country: "Hollanda", price: 50 },
+  { name: "Antonio Nusa", pos: "WG", role: "LW", rating: 82, club: "Leipzig", country: "Norveç", price: 40 },
+  { name: "Jude Bellingham", pos: "MF", role: "CM", rating: 90, club: "Real Madrid", country: "İngiltere", price: 180 },
+  { name: "Rodri", pos: "MF", role: "CM", rating: 90, club: "Man City", country: "İspanya", price: 120 },
+  { name: "Pedri", pos: "MF", role: "CM", rating: 89, club: "Barcelona", country: "İspanya", price: 130 },
+  { name: "Declan Rice", pos: "MF", role: "CM", rating: 88, club: "Arsenal", country: "İngiltere", price: 120 },
+  { name: "Federico Valverde", pos: "MF", role: "CM", rating: 88, club: "Real Madrid", country: "Uruguay", price: 100 },
+  { name: "Gavi", pos: "MF", role: "CM", rating: 85, club: "Barcelona", country: "İspanya", price: 70 },
+  { name: "Enzo Fernández", pos: "MF", role: "CM", rating: 85, club: "Chelsea", country: "Arjantin", price: 80 },
+  { name: "Moisés Caicedo", pos: "MF", role: "CM", rating: 85, club: "Chelsea", country: "Ekvador", price: 80 },
+  { name: "Jamie Bynoe-Gittens", pos: "MF", role: "CM", rating: 82, club: "Dortmund", country: "İngiltere", price: 40 },
+  { name: "Frenkie de Jong", pos: "MF", role: "CM", rating: 86, club: "Barcelona", country: "Hollanda", price: 60 },
+  { name: "William Saliba", pos: "DF", role: "CB", rating: 87, club: "Arsenal", country: "Fransa", price: 80 },
+  { name: "Rúben Dias", pos: "DF", role: "CB", rating: 89, club: "Man City", country: "Portekiz", price: 80 },
+  { name: "Virgil van Dijk", pos: "DF", role: "CB", rating: 89, club: "Liverpool", country: "Hollanda", price: 40 },
+  { name: "Antonio Rüdiger", pos: "DF", role: "CB", rating: 87, club: "Real Madrid", country: "Almanya", price: 30 },
+  { name: "Alessandro Bastoni", pos: "DF", role: "CB", rating: 87, club: "Inter", country: "İtalya", price: 70 },
+  { name: "Josko Gvardiol", pos: "DF", role: "CB", rating: 86, club: "Man City", country: "Hırvatistan", price: 70 },
+  { name: "Pau Cubarsí", pos: "DF", role: "CB", rating: 85, club: "Barcelona", country: "İspanya", price: 60 },
+  { name: "Cristian Romero", pos: "DF", role: "CB", rating: 86, club: "Tottenham", country: "Arjantin", price: 60 },
+  { name: "Trent Alexander-Arnold", pos: "DF", role: "RB", rating: 87, club: "Real Madrid", country: "İngiltere", price: 70 },
+  { name: "Achraf Hakimi", pos: "DF", role: "RB", rating: 87, club: "PSG", country: "Fas", price: 70 },
+  { name: "Alphonso Davies", pos: "DF", role: "LB", rating: 86, club: "Bayern Münih", country: "Kanada", price: 60 },
+  { name: "Theo Hernández", pos: "DF", role: "LB", rating: 86, club: "Al-Hilal", country: "Fransa", price: 45 },
+  { name: "Federico Dimarco", pos: "DF", role: "LB", rating: 85, club: "Inter", country: "İtalya", price: 50 },
+  { name: "Nuno Mendes", pos: "DF", role: "LB", rating: 86, club: "PSG", country: "Portekiz", price: 60 },
+  { name: "Gianluigi Donnarumma", pos: "GK", role: "GK", rating: 89, club: "Man City", country: "İtalya", price: 60 },
+  { name: "Thibaut Courtois", pos: "GK", role: "GK", rating: 89, club: "Real Madrid", country: "Belçika", price: 30 },
+  { name: "Alisson Becker", pos: "GK", role: "GK", rating: 88, club: "Liverpool", country: "Brezilya", price: 40 },
+  { name: "Marc-André ter Stegen", pos: "GK", role: "GK", rating: 87, club: "Barcelona", country: "Almanya", price: 20 },
+  { name: "Mike Maignan", pos: "GK", role: "GK", rating: 86, club: "Milan", country: "Fransa", price: 35 },
+  { name: "David Raya", pos: "GK", role: "GK", rating: 85, club: "Arsenal", country: "İspanya", price: 30 },
+  { name: "Yann Sommer", pos: "GK", role: "GK", rating: 84, club: "Inter", country: "İsviçre", price: 10 }
+];
+
+let LEAGUE = [], SQUADS = {};
+let selectedTeam = null, teamLocked = false, pendingTeam = null;
+let currentWeek = 0, fixtures = [];
+let starterIndices = {}, formations = {};
+let liveTimer = null, liveSpeed = 1200;
+let myMatchState = null, otherMatchesThisWeek = [];
+let season = 1;
+let museum = [];      // sezon sezon kupa geçmişi
+let cupSeason = null; // bu sezonun kupa durumu
+
+// ============ KUPALAR ============
+const COMP_NAME = { cup: 'Ziraat Türkiye Kupası', sc: 'Turkcell Süper Kupa' };
+// week: bu lig haftası oynandıktan SONRA oynanır
+const CUP_EVENTS = [
+  { key: 'R1',   comp: 'cup', name: 'Ön Eleme',      week: 3 },
+  { key: 'R16',  comp: 'cup', name: 'Son 16',        week: 8 },
+  { key: 'QF',   comp: 'cup', name: 'Çeyrek Final',  week: 13 },
+  { key: 'SCSF', comp: 'sc',  name: 'Yarı Final',    week: 16 },
+  { key: 'SCF',  comp: 'sc',  name: 'Final',         week: 17 },
+  { key: 'SF',   comp: 'cup', name: 'Yarı Final',    week: 24 },
+  { key: 'F',    comp: 'cup', name: 'Final',         week: 33 }
+];
+// 1. sezon Süper Kupa: [lig şampiyonu, kupa finalisti, kupa şampiyonu, lig ikincisi] (2025-26 gerçek sonuçları)
+const SC_S1 = ['Galatasaray', 'Konyaspor', 'Trabzonspor', 'Fenerbahçe'];
+const REAL_HISTORY = { label: '2025-26', league: 'Galatasaray', cup: 'Trabzonspor', cupFinalist: 'Konyaspor' };
+
+// Transfer pazarı durumu
+let transferTab = 'league';
+let transferFilter = 'ALL';
+let transferSearch = '';
+let transferSort = 'rating';
+
+// ============ OYUN KURULUM ============
+function initGame() {
+  LEAGUE = LEAGUE_BASE.map(t => ({ name: t.name, strength: t.strength, budget: t.budget, p:0,o:0,g:0,b:0,m:0,gf:0,ga:0 }));
+  SQUADS = {};
+  LEAGUE_BASE.forEach(t => {
+    const base = SQUADS_BASE[t.name] || [];
+    SQUADS[t.name] = base.map(p => ({ ...p, goals: 0, fit: 100, inj: 0, susp: 0, yc: 0 }));
+    const sq = SQUADS[t.name];
+    const need = { GK: 2, DF: 6, MF: 6, WG: 2, FW: 3 };
+    const counts = { GK:0,DF:0,MF:0,WG:0,FW:0 };
+    sq.forEach(p => counts[p.pos] = (counts[p.pos]||0) + 1);
+    for (const [pos, n] of Object.entries(need)) {
+      while ((counts[pos]||0) < n) {
+        counts[pos] = (counts[pos]||0) + 1;
+        const role = pos === 'GK' ? 'GK' : pos === 'DF' ? 'CB' : pos === 'MF' ? 'CM' : pos === 'WG' ? 'LW' : 'ST';
+        sq.push({ name: `${t.name.slice(0,4)} ${pos}${counts[pos]}`, pos, role, rating: Math.max(55, t.strength - 12 + Math.floor(Math.random()*8)), goals: 0, fit: 100, inj: 0, susp: 0, yc: 0 });
+      }
+    }
+  });
+  assignRoles();
+  selectedTeam = null; teamLocked = false; pendingTeam = null; difficulty = 'normal'; coins = 0;
+  currentWeek = 0; starterIndices = {}; formations = {};
+  fixtures = generateFixtures();
+  liveTimer = null; myMatchState = null; otherMatchesThisWeek = [];
+  season = 1;
+  museum = []; cupSeason = newCupSeason(1);
+  prepAll();
+  updateTopBar();
+}
+
+function assignRoles() {
+  LEAGUE.forEach(t => {
+    let dc = 0, wc = 0;
+    SQUADS[t.name].forEach(p => {
+      if (!p.role) {
+        p.role = { GK:'GK', FW:'ST', MF:'CM' }[p.pos] || 'CM';
+        if (p.pos === 'WG') p.role = (wc++ % 2) ? 'RW' : 'LW';
+        if (p.pos === 'DF') p.role = LB_N.includes(p.name) ? 'LB' : RB_N.includes(p.name) ? 'RB' : ['LB','CB','CB','RB','CB','CB'][dc++ % 6];
+      }
+      p.fit = p.fit ?? 100; p.inj = p.inj || 0; p.susp = p.susp || 0; p.yc = p.yc || 0;
+    });
+  });
+}
+
+function prepAll() {
+  LEAGUE.forEach(t => {
+    const r = Math.floor(Math.random() * 4);
+    t.tac = { m: ['def','bal','bal','att'][r], pr: ['low','mid','mid','high'][r], sp: Math.random() < .5 ? 'cross' : 'short' };
+    if (!formations[t.name]) formations[t.name] = ['4-4-2','4-3-3','3-5-2','4-2-3-1'][Math.floor(Math.random() * 4)];
+    starterIndices[t.name] = bestXI(t.name);
+  });
+}
+
+function generateFixtures() {
+  const teams = LEAGUE.map(t => t.name);
+  const n = teams.length, rounds = [];
+  let arr = [...teams];
+  for (let r = 0; r < n - 1; r++) {
+    const week = [];
+    for (let i = 0; i < n / 2; i++) {
+      const home = arr[i], away = arr[n - 1 - i];
+      if (r % 2 === 0) week.push({ home, away });
+      else week.push({ home: away, away: home });
+    }
+    rounds.push(week);
+    arr = [arr[0], arr[n - 1], ...arr.slice(1, n - 1)];
+  }
+  const second = rounds.map(w => w.map(m => ({ home: m.away, away: m.home })));
+  return [...rounds, ...second];
+}
+
+// ============ FORMASYON & ROL ============
+function getFormationCoords(f) {
+  const L = {
+    "4-4-2": [{x:8,y:50},{x:22,y:20},{x:22,y:40},{x:22,y:60},{x:22,y:80},{x:45,y:20},{x:45,y:40},{x:45,y:60},{x:45,y:80},{x:70,y:35},{x:70,y:65}],
+    "4-3-3": [{x:8,y:50},{x:22,y:20},{x:22,y:40},{x:22,y:60},{x:22,y:80},{x:42,y:30},{x:42,y:50},{x:42,y:70},{x:70,y:20},{x:70,y:50},{x:70,y:80}],
+    "3-5-2": [{x:8,y:50},{x:22,y:30},{x:22,y:50},{x:22,y:70},{x:40,y:15},{x:45,y:35},{x:45,y:50},{x:45,y:65},{x:40,y:85},{x:70,y:35},{x:70,y:65}],
+    "4-2-3-1": [{x:8,y:50},{x:22,y:20},{x:22,y:40},{x:22,y:60},{x:22,y:80},{x:40,y:35},{x:40,y:65},{x:58,y:20},{x:58,y:50},{x:58,y:80},{x:75,y:50}]
+  };
+  return L[f] || L["4-4-2"];
+}
+
+function slotKind(c) {
+  if (c.x < 15) return 'GK';
+  if (c.x < 30) return c.y < 30 ? 'LB' : c.y > 70 ? 'RB' : 'CB';
+  if (c.x < 62) return c.y < 30 ? 'LW' : c.y > 70 ? 'RW' : 'CM';
+  return c.y < 30 ? 'LW' : c.y > 70 ? 'RW' : 'ST';
+}
+
+function slotKinds(t) { return getFormationCoords(formations[t] || '4-4-2').map(slotKind); }
+
+function penalty(role, kind) {
+  if (role === kind) return 0;
+  if (role === 'GK' || kind === 'GK') return 35;
+  const a = ROLE[role] || ROLE.CM, b = ROLE[kind] || ROLE.CM;
+  return Math.round(8 * Math.abs(a[0] - b[0]) + 4 * Math.abs(a[1] - b[1]));
+}
+
+const avail = p => !(p.inj > 0 || p.susp > 0);
+
+function effR(p, kind) {
+  return Math.round(Math.max(30, p.rating - penalty(p.role, kind)) * (0.82 + 0.18 * (p.fit ?? 100) / 100));
+}
+
+const val = p => Math.max(1, Math.round(Math.pow(p.rating / 50, 6)));
+
+function isEuroPlayer(p) { return p.club !== undefined && p.price !== undefined; }
+
+function buyPrice(p) {
+  if (isEuroPlayer(p)) return p.price;
+  return Math.max(1, Math.round(val(p) * 1.25));
+}
+function sellPrice(p) {
+  if (isEuroPlayer(p)) return Math.max(1, Math.round(p.price * 0.7));
+  return Math.max(1, Math.round(val(p) * 0.7));
+}
+
+// ============ KADRO ============
+function bestXI(t) {
+  const sq = SQUADS[t], kinds = slotKinds(t), used = new Set(), res = [];
+  const pr = ['GK','ST','LW','RW','LB','RB','CB','CM'];
+  [...kinds.keys()].sort((a, b) => pr.indexOf(kinds[a]) - pr.indexOf(kinds[b])).forEach(i => {
+    let best = -1, bv = -1;
+    sq.forEach((p, j) => { if (used.has(j) || !avail(p)) return; const v = effR(p, kinds[i]); if (v > bv) { bv = v; best = j; } });
+    if (best < 0) sq.forEach((p, j) => { if (best < 0 && !used.has(j)) best = j; });
+    used.add(best); res[i] = best;
+  });
+  return res;
+}
+
+function ensureStarterSet(t) {
+  if (!formations[t]) formations[t] = '4-4-2';
+  if (!starterIndices[t] || starterIndices[t].length < 11) starterIndices[t] = bestXI(t);
+}
+
+function fixLineup(t) {
+  const sq = SQUADS[t], notes = []; let a = starterIndices[t];
+  if (!a || a.length < 11 || new Set(a).size < 11 || a.some(i => !sq[i])) { starterIndices[t] = bestXI(t); return notes; }
+  const kinds = slotKinds(t);
+  a.forEach((i, s) => {
+    if (avail(sq[i])) return;
+    let best = -1, bv = -1;
+    sq.forEach((p, j) => { if (a.includes(j) || !avail(p)) return; const v = effR(p, kinds[s]); if (v > bv) { bv = v; best = j; } });
+    if (best >= 0) { notes.push(`${sq[i].name} (${sq[i].inj > 0 ? 'sakat' : 'cezalı'}) yerine ${sq[best].name} oynayacak`); a[s] = best; }
+  });
+  return notes;
+}
+
+function fixAll() {
+  LEAGUE.forEach(t => {
+    if (t.name !== selectedTeam) starterIndices[t.name] = bestXI(t.name);
+    else { const n = fixLineup(t.name); if (n.length) alert('⚠️ Kadro uyarısı:\n' + n.join('\n')); }
+  });
+}
+
+function getTac(t) { const x = LEAGUE.find(l => l.name === t); if (!x.tac) x.tac = { ...TAC_DEF }; return x.tac; }
+
+function tacMul(t) {
+  const c = getTac(t); let a = 1, d = 1;
+  if (c.m === 'att') { a *= 1.07; d *= .93; }
+  if (c.m === 'def') { a *= .94; d *= 1.07; }
+  if (c.pr === 'high') { a *= 1.03; d *= .97; }
+  if (c.pr === 'low') { a *= .97; d *= 1.03; }
+  return { a, d };
+}
+
+function teamRatings(t) {
+  ensureStarterSet(t);
+  const sq = SQUADS[t], k = slotKinds(t), W = {GK:[0,1.6],CB:[0,1],LB:[.2,1],RB:[.2,1],CM:[.5,.5],LW:[1,.2],RW:[1,.2],ST:[1.3,0]};
+  let A = 0, Aw = 0, D = 0, Dw = 0, E = 0, n = 0;
+  starterIndices[t].forEach((i, s) => {
+    const p = sq[i]; if (!p) return;
+    const e = effR(p, k[s]), w = W[k[s]] || [.5,.5]; E += e; n++;
+    A += e * w[0]; Aw += w[0]; D += e * w[1]; Dw += w[1];
+  });
+  const cm = coachMul(t);
+  return { att: A / Math.max(.01, Aw) * cm, def: D / Math.max(.01, Dw) * cm, eff: E / Math.max(1, n) * cm };
+}
+
+function teamEffectiveStrength(t) { return teamRatings(t).eff; }
+
+function pickScorer(t) {
+  const sq = SQUADS[t], st = starterIndices[t].map(i => sq[i]).filter(Boolean);
+  const cand = st.filter(p => ['FW','WG','MF'].includes(p.pos));
+  if (!cand.length) return st[0] || null;
+  const total = cand.reduce((s, p) => s + p.rating, 0);
+  let r = Math.random() * total;
+  for (const p of cand) { r -= p.rating; if (r <= 0) return p; }
+  return cand[0];
+}
+
+function pickGoal(t) {
+  const sq = SQUADS[t], st = starterIndices[t].map(i => sq[i]).filter(Boolean), c = getTac(t), r = Math.random();
+  const w = f => {
+    const arr = st.filter(f); if (!arr.length) return pickScorer(t);
+    let x = Math.random() * arr.reduce((s, p) => s + p.rating, 0);
+    for (const p of arr) { x -= p.rating; if (x <= 0) return p; }
+    return arr[0];
+  };
+  let k = 'open'; const sp = c.sp === 'cross' ? .2 : .14;
+  if (r < .06) k = 'penalty';
+  else if (r < .06 + sp) k = Math.random() < .65 ? 'corner' : 'freekick';
+  const p = k === 'penalty' ? w(x => ['ST','CM','LW','RW'].includes(x.role))
+    : k === 'corner' ? w(x => x.role === 'CB' || x.role === 'ST')
+    : k === 'freekick' ? w(x => ['CM','LW','RW'].includes(x.role)) : pickScorer(t);
+  return p ? { p, k } : null;
+}
+
+function poisson(lambda) { let L = Math.exp(-lambda), k = 0, p = 1; do { k++; p *= Math.random(); } while (p > L); return k - 1; }
+
+function matchGoals(h, a) {
+  const R = { [h]: teamRatings(h), [a]: teamRatings(a) }, M = { [h]: tacMul(h), [a]: tacMul(a) }, disc = [];
+  [h, a].forEach(t => {
+    const side = t === h ? 'home' : 'away', sq = SQUADS[t], st = starterIndices[t].map(i => sq[i]).filter(Boolean);
+    const pm = getTac(t).pr === 'high' ? 1.4 : 1, yc = {}, rnd = () => 5 + Math.floor(Math.random() * 85);
+    const pick = () => st[Math.floor(Math.random() * st.length)];
+    const add = (type, p, mn, x = {}) => disc.push({ type, team: t, side, player: p.name, minute: mn, ...x });
+    for (let i = poisson(1.5 * pm); i > 0; i--) {
+      const p = pick(), mn = rnd();
+      if (yc[p.name]) add('rc', p, Math.min(90, Math.max(mn, yc[p.name] + 1)));
+      else { yc[p.name] = mn; add('yc', p, mn); }
+    }
+    if (Math.random() < .03) add('rc', pick(), rnd());
+    st.forEach(p => { if (Math.random() < (p.fit < 60 ? .04 : .02) * pm) add('inj', p, rnd(), { weeks: 1 + Math.floor(Math.random() * 5) }); });
+  });
+  disc.forEach(e => {
+    e.text = e.type === 'yc' ? `🟨 ${e.player} sarı kart (${e.team})` : e.type === 'rc' ? `🟥 ${e.player} kırmızı kart! (${e.team})` : `🚑 ${e.player} sakatlandı (${e.team})`;
+    e.color = e.type === 'inj' ? '#f87171' : e.type === 'yc' ? '#fde047' : '#ef4444';
+  });
+  const lam = (x, y) => Math.min(4.5, Math.max(.15, 1.3 * Math.pow(R[x].att * M[x].a / (R[y].def * M[y].d), 2.2) * (x === h ? 1.1 : .95) * diffLamMul(x, y)));
+  let L = { [h]: lam(h, a), [a]: lam(a, h) };
+  [h, a].forEach(t => {
+    const rc = disc.find(e => e.type === 'rc' && e.team === t);
+    if (rc) { const f = (90 - rc.minute) / 90, o = t === h ? a : h; L[t] *= 1 - .3 * f; L[o] *= 1 + .15 * f; }
+  });
+  const events = [...disc];
+  [[h, 'home'], [a, 'away']].forEach(([t, side]) => {
+    for (let i = Math.min(6, poisson(L[t])); i > 0; i--) {
+      const s = pickGoal(t);
+      if (s) events.push({ minute: 1 + Math.floor(Math.random() * 89), type: 'goal', team: t, side, player: s.p.name, kind: s.k });
+    }
+  });
+  events.sort((x, y) => x.minute - y.minute);
+  return { events, hStr: R[h].eff, aStr: R[a].eff };
+}
+
+function simulateQuickMatch(home, away) {
+  const G = matchGoals(home, away), r = { home, away, hGoals: 0, aGoals: 0, homeScorers: [], awayScorers: [], disc: G.events.filter(e => e.type !== 'goal') };
+  G.events.filter(e => e.type === 'goal').forEach(e => {
+    const p = SQUADS[e.team].find(x => x.name === e.player); if (p) p.goals++;
+    if (e.side === 'home') { r.hGoals++; r.homeScorers.push(e.player); } else { r.aGoals++; r.awayScorers.push(e.player); }
+  });
+  return r;
+}
+
+function applyResult(m) {
+  const h = LEAGUE.find(t => t.name === m.home), a = LEAGUE.find(t => t.name === m.away);
+  if (!h || !a) return;
+  h.o++; a.o++;
+  h.gf += m.hGoals; h.ga += m.aGoals; a.gf += m.aGoals; a.ga += m.hGoals;
+  if (m.hGoals > m.aGoals) { h.p += 3; h.g++; a.m++; }
+  else if (m.hGoals < m.aGoals) { a.p += 3; a.g++; h.m++; }
+  else { h.p++; a.p++; h.b++; a.b++; }
+}
+
+function applyDisc(l) {
+  l.forEach(e => {
+    const p = SQUADS[e.team].find(x => x.name === e.player); if (!p) return;
+    if (e.type === 'yc') { p.yc = (p.yc || 0) + 1; if (p.yc >= 4) { p.yc = 0; p.susp = 1; } }
+    else if (e.type === 'rc') p.susp = 1 + (Math.random() < .4 ? 1 : 0);
+    else if (e.type === 'inj') { p.inj = Math.max(p.inj || 0, e.weeks); p.fit = Math.min(p.fit, 60); }
+  });
+}
+
+function weeklyUpdate() {
+  LEAGUE.forEach(t => {
+    const st = new Set(starterIndices[t.name] || []), dr = getTac(t.name).pr === 'high' ? 1.5 : 1;
+    SQUADS[t.name].forEach((p, i) => {
+      if (p.inj > 0) p.inj--;
+      if (p.susp > 0) p.susp--;
+      p.fit = st.has(i) ? Math.max(40, p.fit - Math.round((6 + Math.random() * 3) * dr)) : Math.min(100, p.fit + 10);
+    });
+  });
+}
+
+// ============ SAHA ============
+function buildTeamOnPitch(teamName, side) {
+  ensureStarterSet(teamName);
+  const arr = starterIndices[teamName];
+  const players = SQUADS[teamName];
+  const coords = getFormationCoords(formations[teamName] || "4-4-2");
+  const positions = coords.map(p => side === "away" ? { x: 100 - p.x, y: 100 - p.y } : { ...p });
+  const result = [];
+  for (let slot = 0; slot < 11; slot++) {
+    const idx = arr[slot];
+    if (idx === undefined || !players[idx]) continue;
+    const p = players[idx];
+    result.push({ name: p.name, num: slot + 1, pos: positions[slot], homePos: { ...positions[slot] }, rating: p.rating, team: side, teamName: teamName });
+  }
+  return result;
+}
+
+// ============ SÜRÜKLE-BIRAK ============
+let dragInfo = null, dragClone = null;
+
+function startDrag(e, el, playerIdx, fromBench) {
+  e.preventDefault();
+  if (!selectedTeam) return;
+  dragInfo = { playerIdx, fromBench, origEl: el };
+  dragClone = el.cloneNode(true);
+  dragClone.style.cssText = 'position:fixed; pointer-events:none; z-index:9999; opacity:0.85; transform:translate(-50%,-50%);';
+  const rect = el.getBoundingClientRect();
+  dragClone.style.width = rect.width + 'px';
+  dragClone.style.height = rect.height + 'px';
+  const ev = e.touches ? e.touches[0] : e;
+  dragClone.style.left = ev.clientX + 'px';
+  dragClone.style.top = ev.clientY + 'px';
+  document.body.appendChild(dragClone);
+  el.style.opacity = '0.3';
+  document.addEventListener('mousemove', onDragMove);
+  document.addEventListener('touchmove', onDragMove, { passive: false });
+  document.addEventListener('mouseup', onDragEnd);
+  document.addEventListener('touchend', onDragEnd);
+}
+
+function onDragMove(e) {
+  if (!dragClone) return;
+  e.preventDefault();
+  const ev = e.touches ? e.touches[0] : e;
+  dragClone.style.left = ev.clientX + 'px';
+  dragClone.style.top = ev.clientY + 'px';
+  document.querySelectorAll('.drag-player, .bench-item').forEach(el => el.classList.remove('drop-target'));
+  const target = document.elementFromPoint(ev.clientX, ev.clientY)?.closest('.drag-player, .bench-item');
+  if (target && target !== dragInfo?.origEl) target.classList.add('drop-target');
+}
+
+function onDragEnd(e) {
+  document.removeEventListener('mousemove', onDragMove);
+  document.removeEventListener('touchmove', onDragMove);
+  document.removeEventListener('mouseup', onDragEnd);
+  document.removeEventListener('touchend', onDragEnd);
+  if (!dragInfo) return;
+  const ev = e.changedTouches ? e.changedTouches[0] : e;
+  const targetEl = document.elementFromPoint(ev.clientX, ev.clientY)?.closest('.drag-player, .bench-item');
+  if (targetEl && targetEl !== dragInfo.origEl) {
+    const srcIdx = dragInfo.playerIdx;
+    const targetIdx = parseInt(targetEl.dataset.idx);
+    const arr = starterIndices[selectedTeam];
+    const srcSlot = arr.indexOf(srcIdx);
+    const tgtSlot = arr.indexOf(targetIdx);
+    if (srcSlot >= 0 && tgtSlot >= 0) { arr[srcSlot] = targetIdx; arr[tgtSlot] = srcIdx; }
+    else if (srcSlot >= 0 && tgtSlot < 0) { arr[srcSlot] = targetIdx; }
+    else if (srcSlot < 0 && tgtSlot >= 0) { arr[tgtSlot] = srcIdx; }
+  }
+  if (dragClone) dragClone.remove();
+  if (dragInfo && dragInfo.origEl) dragInfo.origEl.style.opacity = '';
+  dragInfo = null; dragClone = null;
+  document.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
+  renderSquad();
+}
+
+// ============ KADRO EKRANI ============
+function renderSquad() {
+  if (!selectedTeam) { showScreen('teamSelect'); return; }
+  ensureStarterSet(selectedTeam);
+  fixLineup(selectedTeam);
+  const t = selectedTeam, sq = SQUADS[t], arr = starterIndices[t], f = formations[t], kinds = slotKinds(t), coords = getFormationCoords(f), tc = getTac(t), R = teamRatings(t);
+  document.getElementById('squadTitle').textContent = t + " — Kadro Yönetimi";
+  document.getElementById('currentFormation').textContent = f;
+  document.querySelectorAll('.formation-btn').forEach(b => b.classList.toggle('active', b.textContent === f));
+  document.getElementById('teamPower').textContent = Math.round(R.eff);
+  const sel = (k, o) => `<select onchange="setTac('${k}',this.value)">` + o.map(([v, l]) => `<option value="${v}"${tc[k] === v ? ' selected' : ''}>${l}</option>`).join('') + '</select>';
+  document.getElementById('tacBox').innerHTML = `🎯 Mentalite ${sel('m', [['def','Defansif'],['bal','Dengeli'],['att','Hücum']])} Pres ${sel('pr', [['low','Düşük'],['mid','Orta'],['high','Yüksek (yorucu)']])} Duran top ${sel('sp', [['cross','Ortalı'],['short','Kısa']])}<div style="margin-top:6px;color:#aaa;">Hücum ${Math.round(R.att)} · Savunma ${Math.round(R.def)} · Teknik direktör: ${coachOf(t) ? coachOf(t).name + ' (' + coachOf(t).power + ')' : 'yok'} — oyuncular kendi mevkii dışında oynarsa puan kaybeder (⚠️)</div>`;
+  const pitch = document.getElementById('dragPitch');
+  pitch.innerHTML = '';
+  arr.forEach((idx, slot) => {
+    const p = sq[idx]; if (!p) return;
+    const e = effR(p, kinds[slot]), pen = penalty(p.role, kinds[slot]), c = coords[slot], el = document.createElement('div');
+    el.className = 'drag-player'; el.dataset.idx = idx; el.dataset.slot = slot;
+    el.style.left = c.x + '%'; el.style.top = c.y + '%';
+    el.title = `${p.name} · ${ROLE_TR[p.role] || p.role} · kondisyon %${p.fit}`;
+    el.innerHTML = `<div class="dshirt" style="${pen ? 'border-color:#f59e0b;color:#fbbf24;' : ''}">${kinds[slot] === 'GK' && p.role === 'GK' ? '🧤' : e}</div><div class="dlabel">${p.name}${pen ? ' ⚠️-' + pen : ''}</div>`;
+    el.addEventListener('mousedown', ev => startDrag(ev, el, idx, false));
+    el.addEventListener('touchstart', ev => startDrag(ev, el, idx, false), { passive: false });
+    pitch.appendChild(el);
+  });
+  const bg = document.getElementById('benchGrid');
+  bg.innerHTML = '';
+  const bench = sq.map((p, i) => ({ p, i })).filter(({ i }) => !arr.includes(i));
+  document.getElementById('benchCount').textContent = bench.length;
+  bench.forEach(({ p, i }) => {
+    const el = document.createElement('div'); el.className = 'bench-item'; el.dataset.idx = i;
+    el.style.opacity = avail(p) ? '' : '0.55';
+    el.innerHTML = `<div class="bname">${p.name}</div><div class="binfo"><span class="pos-badge pos-${p.pos}">${ROLE_TR[p.role] || p.pos || '?'}</span> ${p.rating} · %${p.fit ?? 100}${p.inj > 0 ? ' 🚑' + p.inj + 'h' : ''}${p.susp > 0 ? ' 🟥' + p.susp : ''}</div>`;
+    el.addEventListener('mousedown', ev => startDrag(ev, el, i, true));
+    el.addEventListener('touchstart', ev => startDrag(ev, el, i, true), { passive: false });
+    bg.appendChild(el);
+  });
+}
+
+function autoPickBest() { if (!selectedTeam) return; starterIndices[selectedTeam] = bestXI(selectedTeam); renderSquad(); }
+function resetSquad() { if (!selectedTeam) return; starterIndices[selectedTeam] = bestXI(selectedTeam); renderSquad(); }
+function setFormation(f) { if (!selectedTeam) return; formations[selectedTeam] = f; starterIndices[selectedTeam] = bestXI(selectedTeam); renderSquad(); }
+function setTac(k, v) { if (!selectedTeam) return; getTac(selectedTeam)[k] = v; renderSquad(); }
+
+// ============ MAÇ ============
+function startMyMatch() {
+  if (!selectedTeam) { alert("Önce takım seç!"); showScreen('teamSelect'); return; }
+  if (currentWeek >= fixtures.length) { alert("Sezon bitti!"); return; }
+  if (liveTimer) return;
+  fixAll();
+  const ev = pendingCupEvent();
+  let myFixture;
+  if (ev) {
+    const draw = getDraw(ev);
+    myFixture = draw.find(m => m.home === selectedTeam || m.away === selectedTeam);
+    if (!myFixture) { playCupAuto(ev); return; }
+    otherMatchesThisWeek = draw.filter(m => m !== myFixture).map(m => simulateCupMatch(m.home, m.away));
+  } else {
+    const week = fixtures[currentWeek];
+    myFixture = week.find(m => m.home === selectedTeam || m.away === selectedTeam);
+    otherMatchesThisWeek = week.filter(m => m !== myFixture).map(m => simulateQuickMatch(m.home, m.away));
+  }
+  const G = matchGoals(myFixture.home, myFixture.away);
+  const allPlayers = [...buildTeamOnPitch(myFixture.home, "home"), ...buildTeamOnPitch(myFixture.away, "away")];
+  myMatchState = {
+    home: myFixture.home, away: myFixture.away, events: G.events,
+    homeScore: 0, awayScore: 0, minute: 0, homeStr: G.hStr, awayStr: G.aStr,
+    players: allPlayers, possession: Math.round((G.hStr / (G.hStr + G.aStr)) * 100), ballHolder: null,
+    cup: ev ? ev.key : null
+  };
+  renderLiveMatchScreen();
+  setTimeout(() => { giveBallToPlayer(); liveTimer = setInterval(tickMyMatch, liveSpeed); }, 500);
+}
+
+function renderLiveMatchScreen() {
+  document.getElementById('startBtn').disabled = true;
+  const m = myMatchState;
+  const evx = m.cup ? CUP_EVENTS.find(e => e.key === m.cup) : null;
+  let html = evx ? `<div style="color:#ffd700; font-weight:bold; margin-bottom:8px;">🏆 ${COMP_NAME[evx.comp]} — ${evx.name}</div>` : '';
+  html += `<div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;"><span>Hız: </span>
+    <button onclick="setLiveSpeed(2000)">🐢 Yavaş</button>
+    <button onclick="setLiveSpeed(1200)">▶ Normal</button>
+    <button onclick="setLiveSpeed(600)">⏩ Hızlı</button>
+    <button onclick="skipMyMatch()">⏭ Maçı Bitir</button></div>`;
+  html += `<div class="stadium-wrap"><div class="scoreboard">
+    <span class="team home">${tn(m.home, 28)}</span>
+    <span class="sc" id="liveScore">0 - 0</span>
+    <span class="team away">${tn(m.away, 28)}</span>
+    <span class="min" id="liveMinute">0'</span></div>
+    <div class="pitch-container"><div class="pitch" id="pitch">
+      <div class="penalty-box left"></div><div class="penalty-box right"></div>
+      <div class="goal-frame left"></div><div class="goal-frame right"></div>
+      <div class="center-circle"></div>
+      <div id="playersLayer"></div>
+      <div class="ball-icon" id="ballIcon" style="left:50%; top:50%;">⚽</div>
+    </div></div></div>`;
+  html += `<div style="margin:10px 0; font-size:13px; color:#aaa;">Topla oynama: <b style="color:#e94560;">${m.home} ${m.possession}%</b> · ${m.away} ${100 - m.possession}%</div>`;
+  html += `<h3>Maç Akışı</h3><div class="event-feed" id="liveEvents"></div>`;
+  html += `<div id="matchSummary" style="margin-top:15px;"></div>`;
+  document.getElementById('liveArea').innerHTML = html;
+  renderPlayers();
+}
+
+function renderPlayers() {
+  const layer = document.getElementById('playersLayer');
+  if (!layer) return;
+  layer.innerHTML = '';
+  myMatchState.players.forEach(p => {
+    const el = document.createElement('div');
+    el.className = `pitch-player ${p.team}`;
+    el.id = `pl-${p.team}-${p.num}`;
+    el.style.left = p.pos.x + '%'; el.style.top = p.pos.y + '%';
+    el.innerHTML = `<div class="shirt">${p.num}</div><div class="plabel">${p.name}</div>`;
+    layer.appendChild(el);
+  });
+}
+
+function giveBallToPlayer() {
+  const m = myMatchState;
+  const c = m.players.filter(p => p.pos.x > 20 && p.pos.x < 80);
+  if (c.length === 0) return;
+  const p = c[Math.floor(Math.random() * c.length)];
+  m.ballHolder = p;
+  const ball = document.getElementById('ballIcon');
+  if (ball) { ball.style.left = p.pos.x + '%'; ball.style.top = (p.pos.y - 3) + '%'; }
+  document.querySelectorAll('.pitch-player').forEach(el => el.classList.remove('has-ball'));
+  const el = document.getElementById(`pl-${p.team}-${p.num}`);
+  if (el) el.classList.add('has-ball');
+  computeTacticalPositions(p.team);
+}
+
+function passBall() {
+  const m = myMatchState;
+  if (!m.ballHolder) { giveBallToPlayer(); return; }
+  const holder = m.ballHolder;
+  const mates = m.players.filter(p => p.team === holder.team && p !== holder);
+  if (mates.length === 0) return;
+  const weights = mates.map(t => Math.max(1, 100 - Math.hypot(t.pos.x - holder.pos.x, t.pos.y - holder.pos.y) * 1.2));
+  const total = weights.reduce((a, b) => a + b, 0);
+  let r = Math.random() * total, target = mates[0];
+  for (let i = 0; i < mates.length; i++) { r -= weights[i]; if (r <= 0) { target = mates[i]; break; } }
+  const ball = document.getElementById('ballIcon');
+  const hEl = document.getElementById(`pl-${holder.team}-${holder.num}`);
+  const tEl = document.getElementById(`pl-${target.team}-${target.num}`);
+  if (hEl) hEl.classList.remove('has-ball');
+  if (ball) { ball.style.left = target.pos.x + '%'; ball.style.top = (target.pos.y - 3) + '%'; }
+  if (tEl) tEl.classList.add('has-ball');
+  m.ballHolder = target;
+  computeTacticalPositions(holder.team);
+  logEvent(m.minute, `🔁 ${holder.name} → ${target.name} pas`, '#60a5fa');
+}
+
+function computeTacticalPositions(attackingTeam) {
+  const m = myMatchState, ball = m.ballHolder;
+  if (!ball) return;
+  const isHome = attackingTeam === "home";
+  const ballX = ball.pos.x, ballY = ball.pos.y;
+  const zone = ballX < 33 ? "defense" : ballX > 66 ? "attack" : "midfield";
+  m.players.forEach(p => {
+    const hx = p.homePos.x, hy = p.homePos.y;
+    const isGK = hx < 12 || hx > 88;
+    const isDF = (hx > 12 && hx < 35) || (hx > 65 && hx < 88);
+    const isMF = (hx >= 35 && hx < 60) || (hx > 40 && hx <= 65);
+    const isFW = hx >= 60 || hx <= 40;
+    let tx = hx, ty = hy;
+    if (p.team === attackingTeam) {
+      if (isGK) { const gx = p.team === "home" ? 8 : 92; tx = gx + (isHome ? 2 : -2); ty = 50 + (ballY - 50) * 0.15; }
+      else if (isDF) { const push = isHome ? 1 : -1; tx = hx + push * (zone === "attack" ? 12 : zone === "midfield" ? 8 : 4); ty = hy + (ballY - hy) * 0.35; }
+      else if (isMF) {
+        const push = isHome ? 1 : -1;
+        tx = hx + push * (zone === "attack" ? 15 : zone === "midfield" ? 6 : 2);
+        const d = Math.hypot(hx - ballX, hy - ballY);
+        if (d < 20 && p !== ball) { tx = hx + (ballX - hx) * 0.6; ty = hy + (ballY - hy) * 0.6; }
+        else ty = hy + (ballY - hy) * 0.4;
+      } else if (isFW) {
+        const push = isHome ? 1 : -1;
+        if (zone === "attack") { const gx = isHome ? 82 : 18; tx = gx + (Math.random() - 0.5) * 10; ty = 50 + (Math.random() - 0.5) * 40; }
+        else if (zone === "midfield") { tx = hx + push * 8; ty = hy + (ballY - hy) * 0.3; }
+        else { tx = hx - push * 5; ty = hy + (ballY - hy) * 0.2; }
+      }
+      if (p === ball) { tx = p.pos.x; ty = p.pos.y; }
+    } else {
+      if (isGK) { const gx = p.team === "home" ? 8 : 92; tx = gx; ty = 50 + (ballY - 50) * 0.3; }
+      else if (isDF) {
+        if (zone === "attack" && isHome !== (p.team === "home")) { tx = hx + (p.team === "home" ? 5 : -5); ty = hy + (ballY - hy) * 0.4; }
+        else { tx = hx; ty = hy + (ballY - hy) * 0.5; }
+      } else if (isMF) {
+        const d = Math.hypot(hx - ballX, hy - ballY);
+        if (d < 18) { tx = hx + (ballX - hx) * 0.7; ty = hy + (ballY - hy) * 0.7; }
+        else if (d < 30) { tx = hx + (ballX - hx) * 0.4; ty = hy + (ballY - hy) * 0.4; }
+        else { tx = hx; ty = hy + (ballY - hy) * 0.3; }
+      } else if (isFW) {
+        if (zone === "attack" && isHome !== (p.team === "home")) { tx = hx + (p.team === "home" ? -8 : 8); ty = hy + (ballY - hy) * 0.3; }
+        else { tx = hx; ty = hy + (ballY - hy) * 0.2; }
+      }
+    }
+    tx = Math.max(4, Math.min(96, tx)); ty = Math.max(6, Math.min(94, ty));
+    p.pos.x = tx; p.pos.y = ty;
+    const el = document.getElementById(`pl-${p.team}-${p.num}`);
+    if (el) { el.style.left = tx + '%'; el.style.top = ty + '%'; }
+  });
+}
+
+function tickMyMatch() {
+  if (!myMatchState) return;
+  const m = myMatchState;
+  m.minute++;
+  m.events.filter(x => x.type !== 'goal' && !x.done && x.minute === m.minute).forEach(x => { x.done = true; logEvent(x.minute, x.text, x.color); });
+  const goalEvent = m.events.find(e => e.minute === m.minute && e.type === "goal" && !e.done);
+  if (goalEvent) {
+    goalEvent.done = true;
+    const ball = document.getElementById('ballIcon');
+    const hEl = m.ballHolder ? document.getElementById(`pl-${m.ballHolder.team}-${m.ballHolder.num}`) : null;
+    if (hEl) hEl.classList.remove('has-ball');
+    const aSide = goalEvent.side, dSide = aSide === "home" ? "away" : "home";
+    m.players.forEach(p => {
+      if (p.team === aSide) { p.pos.x = (aSide === "home" ? 88 : 12) + (Math.random() - 0.5) * 8; p.pos.y = 50 + (Math.random() - 0.5) * 45; }
+      else { p.pos.x = (dSide === "home" ? 10 : 90) + Math.random() * 12; p.pos.y = 50 + (Math.random() - 0.5) * 55; }
+      const el = document.getElementById(`pl-${p.team}-${p.num}`);
+      if (el) { el.style.left = p.pos.x + '%'; el.style.top = p.pos.y + '%'; }
+    });
+    if (ball) { ball.style.left = (goalEvent.side === "home" ? '97%' : '3%'); ball.style.top = '50%'; }
+    setTimeout(() => {
+      if (goalEvent.side === "home") m.homeScore++; else m.awayScore++;
+      document.getElementById('liveScore').textContent = `${m.homeScore} - ${m.awayScore}`;
+      logEvent(m.minute, `⚽ GOL! ${goalEvent.player} (${goalEvent.team})${KIND_TXT[goalEvent.kind] || ''}`, '#e94560');
+      setTimeout(() => {
+        m.players.forEach(p => {
+          p.pos.x = p.homePos.x; p.pos.y = p.homePos.y;
+          const el = document.getElementById(`pl-${p.team}-${p.num}`);
+          if (el) { el.style.left = p.homePos.x + '%'; el.style.top = p.homePos.y + '%'; }
+        });
+        if (ball) { ball.style.left = '50%'; ball.style.top = '50%'; }
+        m.ballHolder = null;
+        setTimeout(() => { if (m.minute < 90) giveBallToPlayer(); }, 500);
+      }, 1200);
+    }, 700);
+    document.getElementById('liveMinute').textContent = m.minute + "'";
+    if (m.minute >= 90) { clearInterval(liveTimer); liveTimer = null; setTimeout(() => finishMyMatch(), 1000); }
+    return;
+  }
+  const holder = m.ballHolder;
+  if (holder) {
+    const zone = holder.pos.x < 33 ? "defense" : holder.pos.x > 66 ? "attack" : "midfield";
+    if (zone === "attack" && Math.random() < 0.15) attemptShot(holder);
+    else if (Math.abs(holder.pos.y - 50) > 30 && Math.random() < 0.2) attemptCross(holder);
+    else if (Math.random() < 0.6) passBall();
+    else {
+      const dir = holder.team === "home" ? 1 : -1;
+      let nx = Math.max(5, Math.min(95, holder.pos.x + dir * 4));
+      let ny = Math.max(8, Math.min(92, holder.pos.y + (Math.random() - 0.5) * 12));
+      holder.pos.x = nx; holder.pos.y = ny;
+      const el = document.getElementById(`pl-${holder.team}-${holder.num}`);
+      const ball = document.getElementById('ballIcon');
+      if (el) { el.style.left = nx + '%'; el.style.top = ny + '%'; }
+      if (ball) { ball.style.left = nx + '%'; ball.style.top = (ny - 3) + '%'; }
+      computeTacticalPositions(holder.team);
+      logEvent(m.minute, `🏃 ${holder.name} topu sürüyor`, '#4ade80');
+    }
+  }
+  document.getElementById('liveMinute').textContent = m.minute + "'";
+  if (m.minute >= 90) { clearInterval(liveTimer); liveTimer = null; setTimeout(() => finishMyMatch(), 1000); }
+}
+
+function attemptShot(holder) {
+  const m = myMatchState;
+  const dir = holder.team === "home" ? 1 : -1;
+  const gx = holder.team === "home" ? 97 : 3;
+  logEvent(m.minute, `🎯 ${holder.name} ŞUT!`, '#f59e0b');
+  m.players.forEach(p => {
+    if (p.team === holder.team && p !== holder) {
+      if ((p.homePos.x > 55 && p.team === "home") || (p.homePos.x < 45 && p.team === "away")) {
+        p.pos.x = gx + (dir > 0 ? -5 : 5) + (Math.random() - 0.5) * 6;
+        p.pos.y = 50 + (Math.random() - 0.5) * 35;
+        const el = document.getElementById(`pl-${p.team}-${p.num}`);
+        if (el) { el.style.left = p.pos.x + '%'; el.style.top = p.pos.y + '%'; }
+      }
+    }
+  });
+  const ball = document.getElementById('ballIcon');
+  if (ball) { ball.style.left = gx + '%'; ball.style.top = (50 + (Math.random() - 0.5) * 20) + '%'; }
+  setTimeout(() => {
+    if (m.minute >= 90) return;
+    const r = Math.random();
+    if (r < 0.12) {
+      if (holder.team === m.home) m.homeScore++; else m.awayScore++;
+      document.getElementById('liveScore').textContent = `${m.homeScore} - ${m.awayScore}`;
+      logEvent(m.minute, `⚽ GOL! ${holder.name} (${holder.team})`, '#e94560');
+      setTimeout(() => {
+        m.players.forEach(p => { p.pos.x = p.homePos.x; p.pos.y = p.homePos.y; const el = document.getElementById(`pl-${p.team}-${p.num}`); if (el) { el.style.left = p.homePos.x + '%'; el.style.top = p.homePos.y + '%'; } });
+        if (ball) { ball.style.left = '50%'; ball.style.top = '50%'; }
+        m.ballHolder = null;
+        setTimeout(() => { if (m.minute < 90) giveBallToPlayer(); }, 600);
+      }, 1000);
+    } else if (r < 0.62) {
+      logEvent(m.minute, `🧤 Kaleci kurtardı!`, '#60a5fa');
+      const gk = m.players.find(p => p.team !== holder.team && (p.homePos.x < 12 || p.homePos.x > 88));
+      if (gk) { m.ballHolder = gk; document.querySelectorAll('.pitch-player').forEach(el => el.classList.remove('has-ball')); const gEl = document.getElementById(`pl-${gk.team}-${gk.num}`); if (gEl) gEl.classList.add('has-ball'); if (ball) { ball.style.left = gk.pos.x + '%'; ball.style.top = (gk.pos.y - 3) + '%'; } computeTacticalPositions(gk.team); }
+    } else {
+      logEvent(m.minute, `❌ Şut auta gitti`, '#aaa');
+      const gk = m.players.find(p => p.team !== holder.team && (p.homePos.x < 12 || p.homePos.x > 88));
+      if (gk) { m.ballHolder = gk; document.querySelectorAll('.pitch-player').forEach(el => el.classList.remove('has-ball')); const gEl = document.getElementById(`pl-${gk.team}-${gk.num}`); if (gEl) gEl.classList.add('has-ball'); if (ball) { ball.style.left = gk.pos.x + '%'; ball.style.top = (gk.pos.y - 3) + '%'; } computeTacticalPositions(gk.team); }
+    }
+  }, 800);
+}
+
+function attemptCross(holder) {
+  const m = myMatchState;
+  logEvent(m.minute, `📤 ${holder.name} orta yapıyor`, '#8b5cf6');
+  const ball = document.getElementById('ballIcon');
+  const tx = holder.team === "home" ? 82 : 18;
+  const ty = 50 + (Math.random() - 0.5) * 30;
+  if (ball) { ball.style.left = tx + '%'; ball.style.top = ty + '%'; }
+  m.players.forEach(p => {
+    if (p.team === holder.team && ((p.homePos.x > 55 && p.team === "home") || (p.homePos.x < 45 && p.team === "away"))) {
+      p.pos.x = tx + (Math.random() - 0.5) * 8; p.pos.y = ty + (Math.random() - 0.5) * 20;
+      const el = document.getElementById(`pl-${p.team}-${p.num}`);
+      if (el) { el.style.left = p.pos.x + '%'; el.style.top = p.pos.y + '%'; }
+    }
+  });
+  setTimeout(() => {
+    if (m.minute >= 90) return;
+    const atts = m.players.filter(p => p.team === holder.team && Math.abs(p.pos.x - tx) < 10 && Math.abs(p.pos.y - ty) < 15);
+    const defs = m.players.filter(p => p.team !== holder.team && Math.abs(p.pos.x - tx) < 10 && Math.abs(p.pos.y - ty) < 15);
+    if (Math.random() < 0.4 && atts.length > 0) {
+      const h = atts[0]; m.ballHolder = h;
+      document.querySelectorAll('.pitch-player').forEach(el => el.classList.remove('has-ball'));
+      const hEl = document.getElementById(`pl-${h.team}-${h.num}`); if (hEl) hEl.classList.add('has-ball');
+      logEvent(m.minute, `💥 ${h.name} kafa vuruşu!`, '#f59e0b');
+      setTimeout(() => attemptShot(h), 400);
+    } else if (defs.length > 0) {
+      const d = defs[Math.floor(Math.random() * defs.length)];
+      m.ballHolder = d;
+      document.querySelectorAll('.pitch-player').forEach(el => el.classList.remove('has-ball'));
+      const dEl = document.getElementById(`pl-${d.team}-${d.num}`); if (dEl) dEl.classList.add('has-ball');
+      if (ball) { ball.style.left = d.pos.x + '%'; ball.style.top = (d.pos.y - 3) + '%'; }
+      computeTacticalPositions(d.team);
+      logEvent(m.minute, `🛡️ ${d.name} kafayla uzaklaştırdı`, '#60a5fa');
+    }
+  }, 700);
+}
+
+function setLiveSpeed(ms) { liveSpeed = ms; if (liveTimer) { clearInterval(liveTimer); liveTimer = setInterval(tickMyMatch, liveSpeed); } }
+
+function skipMyMatch() {
+  if (!liveTimer) return;
+  clearInterval(liveTimer); liveTimer = null;
+  const m = myMatchState;
+  m.events.forEach(e => { if (e.type === "goal" && !e.done) { if (e.team === m.home) m.homeScore++; else m.awayScore++; e.done = true; } });
+  m.minute = 90;
+  document.getElementById('liveMinute').textContent = "90'";
+  document.getElementById('liveScore').textContent = `${m.homeScore} - ${m.awayScore}`;
+  finishMyMatch();
+}
+
+function logEvent(minute, text, color) {
+  const evDiv = document.getElementById('liveEvents');
+  if (!evDiv) return;
+  const line = document.createElement('div');
+  line.className = 'live-event';
+  line.innerHTML = `<b style="color:${color};">${minute}'</b> — ${text}`;
+  evDiv.prepend(line);
+}
+
+function finishMyMatch() {
+  const m = myMatchState;
+  if (m.cup) { finishCupMatch(); return; }
+  applyResult({ home: m.home, away: m.away, hGoals: m.homeScore, aGoals: m.awayScore });
+  recordLeagueWeek(currentWeek, { home: m.home, away: m.away, hGoals: m.homeScore, aGoals: m.awayScore }, otherMatchesThisWeek);
+  m.events.forEach(e => { if (e.type === 'goal') { const p = SQUADS[e.team].find(x => x.name === e.player); if (p) p.goals++; } });
+  applyDisc(m.events.filter(e => e.type !== 'goal'));
+  otherMatchesThisWeek.forEach(r => { applyResult(r); applyDisc(r.disc || []); });
+  weeklyUpdate();
+  const myT = LEAGUE.find(t => t.name === selectedTeam);
+  const myG = m.home === selectedTeam ? m.homeScore : m.awayScore;
+  const oppG = m.home === selectedTeam ? m.awayScore : m.homeScore;
+  const dd = D(), inc = +(dd.base + (myG > oppG ? dd.win : myG === oppG ? dd.draw : 0)).toFixed(1);
+  const wage = +(SQUADS[selectedTeam].reduce((s, p) => s + val(p), 0) * 0.004).toFixed(1);
+  myT.budget = +(myT.budget + inc - wage).toFixed(1);
+  currentWeek++; updateTopBar();
+  let html = `<div class="other-matches"><h3>✅ ${m.home} ${m.homeScore} - ${m.awayScore} ${m.away}</h3>
+    <div style="color:#4ade80; margin:10px 0;">💰 Gelir +${inc}M € · Maaş −${wage}M €</div><h3>Diğer Maçlar (Hafta ${currentWeek})</h3>`;
+  otherMatchesThisWeek.forEach(r => {
+    html += `<div class="match-row"><span>${tn(r.home, 20)}</span><span class="score">${r.hGoals} - ${r.aGoals}</span><span>${tn(r.away, 20)}</span></div>`;
+    if (r.homeScorers.length || r.awayScorers.length) {
+      html += `<div style="font-size:12px; color:#aaa; padding:0 10px 8px 10px;">`;
+      if (r.homeScorers.length) html += `⚽ ${r.home}: ${r.homeScorers.join(', ')} `;
+      if (r.awayScorers.length) html += `| ⚽ ${r.away}: ${r.awayScorers.join(', ')}`;
+      html += `</div>`;
+    }
+  });
+  html += `<button onclick="resetLiveArea()" style="margin-top:15px;">Menüye Dön</button>`;
+  if (currentWeek < fixtures.length) html += `<button onclick="nextWeekMatch()" style="margin-top:15px;">▶ Sonraki Hafta</button>`;
+  document.getElementById('matchSummary').innerHTML = html + `</div>`;
+  document.getElementById('startBtn').disabled = false;
+  if (currentWeek >= fixtures.length) setTimeout(showSeasonEnd, 800);
+}
+
+function nextWeekMatch() { document.getElementById('liveArea').innerHTML = ''; renderFixtureInfo(); startMyMatch(); }
+function resetLiveArea() { document.getElementById('liveArea').innerHTML = ''; showScreen('menu'); }
+
+function showSeasonEnd() {
+  const st = getStandings(), rank = st.findIndex(t => t.name === selectedTeam) + 1, me = LEAGUE.find(t => t.name === selectedTeam), prize = Math.max(0, 19 - rank) * D().prize;
+  const ME = museumEntry(); ME.league = st[0].name; ME.myRank = rank;
+  if (!me.paid) { me.paid = 1; me.budget = +(me.budget + prize).toFixed(1); }
+  let coinTxt = '';
+  if (rank === 1 && !me.coinPaid) { me.coinPaid = 1; addCoins(D().tc.lig); }
+  if (rank === 1) coinTxt = ` · 🪙 Şampiyonluk ödülü: +${D().tc.lig} Coin`;
+  const sc = [];
+  LEAGUE.forEach(t => SQUADS[t.name].forEach(p => { if (p.goals > 0) sc.push({ n: p.name, t: t.name, g: p.goals }); }));
+  sc.sort((a, b) => b.g - a.g);
+  document.getElementById('liveArea').innerHTML = `<div class="panel"><h2>🏁 Sezon ${season} Bitti</h2><p>🏆 Şampiyon: <b>${st[0].name}</b> (${st[0].p} puan)</p><p>🏆 Ziraat Türkiye Kupası: <b>${ME.cup || '—'}</b> · 🥇 Süper Kupa: <b>${ME.supercup || '—'}</b></p><p>Senin sıran: <b>${rank}.</b> · Sezon primi: +${prize}M €${coinTxt}</p><h3>⚽ Gol Krallığı</h3>${sc.slice(0, 5).map((x, i) => `<div class="match-row"><span>${i + 1}. ${x.n} (${x.t})</span><span class="score">${x.g}</span></div>`).join('')}<button onclick="showScreen('museum')">🏛️ Müze</button><button onclick="newSeason()">▶ Yeni Sezon</button></div>`;
+  document.getElementById('startBtn').disabled = true; updateTopBar();
+}
+
+function newSeason() {
+  const stN = getStandings().map(t => t.name), ent = museumEntry(season);
+  ent.league = ent.league || stN[0]; ent.myRank = ent.myRank || (stN.indexOf(selectedTeam) + 1);
+  let sc = [...new Set([stN[0], ent.cupFinalist, ent.cup, stN[1]].filter(Boolean))];
+  for (const n of stN) { if (sc.length >= 4) break; if (!sc.includes(n)) sc.push(n); }
+  season++;
+  cupSeason = newCupSeason(season, sc);
+  LEAGUE.forEach(t => {
+    Object.assign(t, { p: 0, o: 0, g: 0, b: 0, m: 0, gf: 0, ga: 0, paid: 0, coinPaid: 0 });
+    SQUADS[t.name].forEach(p => {
+      Object.assign(p, { goals: 0, fit: 100, inj: 0, susp: 0, yc: 0 });
+      p.rating = Math.max(50, Math.min(95, p.rating + Math.floor(Math.random() * 5) - 2));
+    });
+  });
+  fixtures = generateFixtures(); currentWeek = 0;
+  LEAGUE.forEach(t => { starterIndices[t.name] = bestXI(t.name); });
+  document.getElementById('liveArea').innerHTML = ''; document.getElementById('startBtn').disabled = false; myMatchState = null;
+  showScreen('menu');
+}
+
+// ============ KUPA MOTORU ============
+function newCupSeason(s, sc) {
+  return { season: s, alive: LEAGUE.map(t => t.name), sc: sc || SC_S1.slice(), draws: {}, results: {}, played: {} };
+}
+
+function museumEntry(s = season) {
+  let e = museum.find(x => x.season === s);
+  if (!e) { e = { season: s, league: null, myRank: null, cup: null, cupFinalist: null, supercup: null, supercupFinalist: null }; museum.push(e); }
+  return e;
+}
+
+function seasonLabel(s) { return `${2025 + s}-${String((2026 + s) % 100).padStart(2, '0')}`; }
+
+function pendingCupEvent() {
+  if (!cupSeason) return null;
+  return CUP_EVENTS.find(e => !cupSeason.played[e.key] && e.week <= currentWeek) || null;
+}
+
+function shuffle(a) {
+  const b = [...a];
+  for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; }
+  return b;
+}
+
+function getDraw(ev) {
+  const cs = cupSeason;
+  if (cs.draws[ev.key]) return cs.draws[ev.key];
+  const pairUp = arr => { const o = []; for (let i = 0; i + 1 < arr.length; i += 2) o.push({ home: arr[i], away: arr[i + 1] }); return o; };
+  let pairs;
+  if (ev.key === 'R1') {
+    const str = n => LEAGUE.find(t => t.name === n).strength;
+    pairs = pairUp(shuffle([...cs.alive].sort((a, b) => str(a) - str(b)).slice(0, 4)));
+  } else if (ev.key === 'SCSF') pairs = pairUp(cs.sc);
+  else if (ev.key === 'SCF') pairs = pairUp((cs.results.SCSF || []).map(r => r.winner));
+  else pairs = pairUp(shuffle(cs.alive));
+  cs.draws[ev.key] = pairs;
+  return pairs;
+}
+
+function resolveKnockout(h, a, hg, ag) {
+  const r = { hGoals: hg, aGoals: ag, et: false, pen: null, winner: null };
+  if (hg !== ag) { r.winner = hg > ag ? h : a; return r; }
+  r.et = true;
+  const sh = teamEffectiveStrength(h), sa = teamEffectiveStrength(a);
+  r.hGoals += poisson(0.35 * Math.pow(sh / sa, 2));
+  r.aGoals += poisson(0.35 * Math.pow(sa / sh, 2));
+  if (r.hGoals !== r.aGoals) { r.winner = r.hGoals > r.aGoals ? h : a; return r; }
+  const ph0 = .75 + (sh - sa) / 500, pa0 = .75 + (sa - sh) / 500;
+  let ph = 0, pa = 0;
+  for (let i = 0; i < 5; i++) { if (Math.random() < ph0) ph++; if (Math.random() < pa0) pa++; }
+  while (ph === pa) { if (Math.random() < ph0) ph++; if (Math.random() < pa0) pa++; }
+  r.pen = [ph, pa]; r.winner = ph > pa ? h : a;
+  return r;
+}
+
+function simulateCupMatch(h, a) {
+  const G = matchGoals(h, a);
+  const r = { home: h, away: a, hGoals: 0, aGoals: 0, homeScorers: [], awayScorers: [], disc: G.events.filter(e => e.type !== 'goal') };
+  G.events.filter(e => e.type === 'goal').forEach(e => {
+    if (e.side === 'home') { r.hGoals++; r.homeScorers.push(e.player); } else { r.aGoals++; r.awayScorers.push(e.player); }
+  });
+  return Object.assign(r, resolveKnockout(h, a, r.hGoals, r.aGoals));
+}
+
+function recordCupEvent(ev, results) {
+  const cs = cupSeason;
+  cs.results[ev.key] = results.map(r => ({ home: r.home, away: r.away, hGoals: r.hGoals, aGoals: r.aGoals, et: r.et, pen: r.pen, winner: r.winner }));
+  cs.played[ev.key] = true;
+  const winners = results.map(r => r.winner);
+  if (ev.comp === 'cup') {
+    const playing = new Set(results.flatMap(r => [r.home, r.away]));
+    cs.alive = cs.alive.filter(t => !playing.has(t)).concat(winners);
+  }
+  const me = museumEntry();
+  const loser = r => r.winner === r.home ? r.away : r.home;
+  if (ev.key === 'F') { me.cup = winners[0]; me.cupFinalist = loser(results[0]); }
+  if (ev.key === 'SCF') { me.supercup = winners[0]; me.supercupFinalist = loser(results[0]); }
+}
+
+function cupScoreTxt(r) {
+  return `${r.hGoals} - ${r.aGoals}` + (r.pen ? ` <small>(pen. ${r.pen[0]}-${r.pen[1]})</small>` : r.et ? ' <small>(uzatma)</small>' : '');
+}
+
+function cupRow(r) {
+  const mine = r.home === selectedTeam || r.away === selectedTeam;
+  const nm = n => tn(n, 20, n === r.winner);
+  let html = `<div class="match-row" ${mine ? 'style="background:#0f3460; padding:8px;"' : ''}><span>${nm(r.home)}</span><span class="score">${cupScoreTxt(r)}</span><span>${nm(r.away)}</span></div>`;
+  if ((r.homeScorers && r.homeScorers.length) || (r.awayScorers && r.awayScorers.length)) {
+    html += `<div style="font-size:12px; color:#aaa; padding:0 10px 8px 10px;">`;
+    if (r.homeScorers.length) html += `⚽ ${r.home}: ${r.homeScorers.join(', ')} `;
+    if (r.awayScorers.length) html += `| ⚽ ${r.away}: ${r.awayScorers.join(', ')}`;
+    html += `</div>`;
+  }
+  return html;
+}
+
+// Kullanıcının takımı bu turda yoksa: tüm maçlar otomatik oynanır
+function playCupAuto(ev) {
+  const res = getDraw(ev).map(p => simulateCupMatch(p.home, p.away));
+  res.forEach(r => applyDisc(r.disc || []));
+  weeklyUpdate();
+  recordCupEvent(ev, res);
+  updateTopBar();
+  const finalDone = ev.key === 'F' || ev.key === 'SCF';
+  let html = `<div class="panel"><h2>🏆 ${COMP_NAME[ev.comp]} — ${ev.name}</h2>`;
+  html += res.map(cupRow).join('');
+  if (finalDone) html += `<p style="color:#ffd700; margin-top:10px;">🏆 Şampiyon: <b>${res[0].winner}</b></p>`;
+  html += `<button onclick="resetLiveArea()">Menüye Dön</button><button onclick="nextWeekMatch()">▶ Devam</button></div>`;
+  document.getElementById('liveArea').innerHTML = html;
+  document.getElementById('startBtn').disabled = false;
+  renderCupCalendar();
+}
+
+// Kullanıcının canlı oynadığı kupa maçı bitti
+function finishCupMatch() {
+  const m = myMatchState, ev = CUP_EVENTS.find(e => e.key === m.cup);
+  const mine = Object.assign({ home: m.home, away: m.away, homeScorers: [], awayScorers: [] }, resolveKnockout(m.home, m.away, m.homeScore, m.awayScore));
+  m.events.filter(e => e.type === 'goal').forEach(e => (e.side === 'home' ? mine.homeScorers : mine.awayScorers).push(e.player));
+  applyDisc(m.events.filter(e => e.type !== 'goal'));
+  otherMatchesThisWeek.forEach(r => applyDisc(r.disc || []));
+  weeklyUpdate();
+  const won = mine.winner === selectedTeam, lastRound = ev.key === 'F' || ev.key === 'SCF';
+  const myT = LEAGUE.find(t => t.name === selectedTeam);
+  const dd = D();
+  let inc = won ? dd.cup : dd.cupL;
+  if (won && ev.key === 'F') inc += dd.cupF; else if (won && ev.key === 'SCF') inc += dd.sc;
+  myT.budget = +(myT.budget + inc).toFixed(1);
+  const coinGain = won ? (ev.key === 'F' ? dd.tc.cup : ev.key === 'SCF' ? dd.tc.sc : 0) : 0;
+  if (coinGain) addCoins(coinGain);
+  recordCupEvent(ev, [mine, ...otherMatchesThisWeek]);
+  updateTopBar();
+  let banner;
+  if (won && lastRound) banner = `🏆 TEBRİKLER! ${COMP_NAME[ev.comp]} şampiyonu oldun — kupa müzene eklendi!`;
+  else if (won && ev.key === 'SCSF') banner = '✅ Süper Kupa finaline yükseldin!';
+  else if (won) banner = '✅ Bir üst tura yükseldin!';
+  else banner = lastRound ? '🥈 Finalde kaybettin.' : '❌ Kupaya veda ettin.';
+  let html = `<div class="other-matches"><h3>${m.home} ${cupScoreTxt(mine)} ${m.away}</h3>
+    <div style="color:#ffd700; font-size:16px; margin:10px 0;">${banner}</div>
+    <div style="color:#4ade80; margin:10px 0;">💰 Gelir +${inc.toFixed(1)}M €</div>${coinGain ? `<div style="color:#fbbf24; margin:10px 0;">🪙 Kupa ödülü +${coinGain} Coin</div>` : ''}`;
+  if (otherMatchesThisWeek.length) html += `<h3>Diğer ${ev.name} Maçları</h3>` + otherMatchesThisWeek.map(cupRow).join('');
+  if (won && lastRound) html += `<button onclick="showScreen('museum')" style="margin-top:15px;">🏛️ Müzeyi Gör</button>`;
+  html += `<button onclick="resetLiveArea()" style="margin-top:15px;">Menüye Dön</button><button onclick="nextWeekMatch()" style="margin-top:15px;">▶ Devam</button></div>`;
+  document.getElementById('matchSummary').innerHTML = html;
+  document.getElementById('startBtn').disabled = false;
+  renderCupCalendar();
+}
+
+function renderCupCalendar() {
+  const el = document.getElementById('cupCalendar');
+  if (!el || !cupSeason) return;
+  const cs = cupSeason, me = selectedTeam, pend = pendingCupEvent();
+  const nm = n => n === me ? `<b style="color:#ffd700;">${n}</b>` : n;
+  let h = `<h3 style="margin-top:0;">🏆 Kupa Takvimi — Sezon ${season}</h3>`;
+  ['cup', 'sc'].forEach(comp => {
+    h += `<h4 style="color:${comp === 'sc' ? '#fbbf24' : '#34d399'}; margin:14px 0 4px;">${comp === 'sc' ? '🥇' : '🏆'} ${COMP_NAME[comp]}</h4>`;
+    if (comp === 'sc') h += `<div style="font-size:12px; color:#aaa;">Katılımcılar: ${cs.sc.map(nm).join(' · ')}</div>`;
+    else if (me && !cs.played.F) h += `<div style="font-size:12px; color:#aaa;">${cs.alive.includes(me) ? '✅ Kupada hayattasın' : '❌ Takımın elendi'} · Kalan takım: ${cs.alive.length}</div>`;
+    CUP_EVENTS.filter(e => e.comp === comp).forEach(ev => {
+      const icon = cs.played[ev.key] ? '✅' : (pend && pend.key === ev.key ? '▶️' : '⏳');
+      h += `<div style="padding:6px 0; border-bottom:1px solid #2a2a4a;"><b>${icon} ${ev.name}</b> <span style="color:#888; font-size:12px;">· Hafta ${ev.week} sonrası</span>`;
+      const line = t => `<div style="font-size:13px; padding-left:22px;">${t}</div>`;
+      if (cs.played[ev.key]) cs.results[ev.key].forEach(r => h += line(`${nm(r.home)} ${r.hGoals}-${r.aGoals}${r.pen ? ` (pen. ${r.pen[0]}-${r.pen[1]})` : r.et ? ' (uz.)' : ''} ${nm(r.away)}`));
+      else {
+        const d = cs.draws[ev.key] || (ev.key === 'SCSF' ? getDraw(ev) : null);
+        if (d) d.forEach(p => h += line(`${nm(p.home)} vs ${nm(p.away)}`));
+        else h += `<div style="font-size:12px; color:#777; padding-left:22px;">Kura henüz çekilmedi</div>`;
+      }
+      h += `</div>`;
+    });
+  });
+  el.innerHTML = h;
+}
+
+// ============ MÜZE ============
+function renderMuseum() {
+  const el = document.getElementById('museumBody');
+  if (!el) return;
+  if (!selectedTeam) { el.innerHTML = '<p>Önce bir takım seç.</p>'; return; }
+  museumEntry();
+  const TYPES = [
+    { k: 'league', n: 'Süper Lig Şampiyonluğu', i: '🏆' },
+    { k: 'cup', n: 'Ziraat Türkiye Kupası', i: '🏆' },
+    { k: 'supercup', n: 'Turkcell Süper Kupa', i: '🥇' }
+  ];
+  const mine = museum.filter(e => TYPES.some(t => e[t.k] === selectedTeam));
+  let h = `<h3 style="margin-top:0;">${selectedTeam} — Kupa Vitrini</h3>`;
+  h += `<div style="display:flex; gap:10px; flex-wrap:wrap;">` + TYPES.map(t => {
+    const c = museum.filter(e => e[t.k] === selectedTeam).length;
+    return `<div class="cabinet-card" style="flex:1; min-width:150px;"><div style="font-size:12px; color:#aaa;">${t.n}</div><div class="cnt">${t.i} ${c}</div></div>`;
+  }).join('') + `</div>`;
+  const tiles = [];
+  [...museum].sort((a, b) => a.season - b.season).forEach(e => TYPES.forEach(t => {
+    if (e[t.k] === selectedTeam) tiles.push(`<div class="trophy"><div class="ic">${t.i}</div><div class="nm">${t.n}</div><div class="sn">${seasonLabel(e.season)}</div></div>`);
+  }));
+  h += tiles.length ? `<div class="trophy-shelf">${tiles.join('')}</div>` : `<div class="hint-box" style="margin:15px 0;">Vitrin henüz boş. Lig, Ziraat Türkiye Kupası veya Süper Kupa'yı kazan, kupan burada sergilensin!</div>`;
+  const cell = n => n === selectedTeam ? `<b style="color:#ffd700;">🏆 ${n}</b>` : (n || '—');
+  const fin = n => n ? `<div style="font-size:11px; color:#888;">Finalist: ${n === selectedTeam ? '<b style="color:#ffd700;">' + n + '</b>' : n}</div>` : '';
+  h += `<h3>📜 Sezon Geçmişi</h3><table><thead><tr><th>Sezon</th><th>Süper Lig</th><th>Ziraat Kupası</th><th>Süper Kupa</th></tr></thead><tbody>`;
+  [...museum].sort((a, b) => b.season - a.season).forEach(e => {
+    h += `<tr><td>${seasonLabel(e.season)}</td><td>${cell(e.league)}${e.league === selectedTeam || !e.myRank ? '' : `<div style="font-size:11px; color:#888;">Senin sıran: ${e.myRank}.</div>`}</td><td>${cell(e.cup)}${fin(e.cupFinalist)}</td><td>${cell(e.supercup)}${fin(e.supercupFinalist)}</td></tr>`;
+  });
+  h += `<tr style="color:#888;"><td>${REAL_HISTORY.label} <small>(gerçek)</small></td><td>${REAL_HISTORY.league}</td><td>${REAL_HISTORY.cup}${fin(REAL_HISTORY.cupFinalist)}</td><td>—</td></tr>`;
+  h += `</tbody></table>`;
+  el.innerHTML = h;
+}
+
+// ============ MODERN TRANSFER PAZARI ============
+function setTransferTab(t) { transferTab = t; renderTransfer(); }
+function setTransferFilter(f) { transferFilter = f; renderTransfer(); }
+function setTransferSort(s) { transferSort = s; renderTransfer(); }
+
+function renderTransfer() {
+  if (!selectedTeam) return;
+  const myBudget = LEAGUE.find(t => t.name === selectedTeam).budget;
+  document.getElementById('transferBudget').textContent = myBudget + "M €";
+
+  const tabBar = `<div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;">
+    <button onclick="setTransferTab('league')" style="padding:8px 16px; border-radius:6px; ${transferTab==='league'?'background:#e94560; color:#fff; border-color:#e94560;':''}">⚽ Süper Lig Oyuncuları</button>
+    <button onclick="setTransferTab('euro')" style="padding:8px 16px; border-radius:6px; ${transferTab==='euro'?'background:#e94560; color:#fff; border-color:#e94560;':''}">🌍 Avrupa Yıldızları</button>
+  </div>`;
+
+  const filterBar = `<div style="display:flex; gap:8px; margin-bottom:15px; flex-wrap:wrap; align-items:center;">
+    <input type="text" id="searchInput" placeholder="Oyuncu veya kulüp ara..." value="${transferSearch}" oninput="transferSearch=this.value;renderTransfer()" style="flex:1; min-width:200px;">
+    <select onchange="setTransferSort(this.value)">
+      <option value="rating" ${transferSort==='rating'?'selected':''}>Rating'e Göre</option>
+      <option value="price" ${transferSort==='price'?'selected':''}>Fiyata Göre</option>
+    </select>
+  </div>`;
+  const posBar = `<div style="display:flex; gap:6px; margin-bottom:15px; flex-wrap:wrap;">
+    ${['ALL','GK','DF','MF','WG','FW'].map(p => `<button onclick="setTransferFilter('${p}')" style="padding:6px 14px; border-radius:6px; font-size:12px; ${transferFilter===p?'background:#e94560; color:#fff; border-color:#e94560;':''}">${p==='ALL'?'Tümü':p}</button>`).join('')}
+  </div>`;
+
+  let buyables = [];
+  if (transferTab === 'league') {
+    LEAGUE.forEach(t => {
+      if (t.name === selectedTeam) return;
+      SQUADS[t.name].forEach((p, idx) => buyables.push({ ...p, fromTeam: t.name, fromIdx: idx, isEuro: false }));
+    });
+  } else {
+    EURO_STARS.forEach((p, idx) => buyables.push({ ...p, fromTeam: p.club, fromIdx: idx, isEuro: true }));
+  }
+
+  if (transferFilter !== 'ALL') buyables = buyables.filter(p => p.pos === transferFilter);
+  if (transferSearch.trim()) {
+    const q = transferSearch.toLowerCase();
+    buyables = buyables.filter(p => p.name.toLowerCase().includes(q) || (p.club || p.fromTeam || '').toLowerCase().includes(q));
+  }
+  if (transferSort === 'rating') buyables.sort((a, b) => b.rating - a.rating);
+  else if (transferSort === 'price') buyables.sort((a, b) => buyPrice(a) - buyPrice(b));
+
+  const buyList = document.getElementById('buyList');
+  buyList.innerHTML = tabBar + filterBar + posBar + `<div style="color:#aaa; font-size:12px; margin-bottom:10px;">${buyables.length} oyuncu listeleniyor</div>`;
+
+  buyables.slice(0, 100).forEach(p => {
+    const price = buyPrice(p);
+    const posColor = {GK:'#f59e0b', DF:'#3b82f6', MF:'#10b981', WG:'#8b5cf6', FW:'#e94560'}[p.pos];
+    const card = document.createElement('div');
+    card.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:12px; margin:6px 0; background:#0f3460; border-radius:8px; border:1px solid #1a3a6a; transition:all 0.15s;';
+    card.onmouseenter = () => card.style.borderColor = '#e94560';
+    card.onmouseleave = () => card.style.borderColor = '#1a3a6a';
+    card.innerHTML = `
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div style="width:40px; height:40px; border-radius:50%; background:${posColor}; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:16px; flex-shrink:0;">${p.rating}</div>
+        <div>
+          <div style="font-weight:bold; font-size:14px;">${p.name}</div>
+          <div style="font-size:11px; color:#aaa; margin-top:2px;">
+            <span style="background:${posColor}; color:#fff; padding:1px 6px; border-radius:3px; font-weight:bold; font-size:10px;">${ROLE_TR[p.role] || p.pos}</span>
+            <span style="margin-left:6px;">${p.club || p.fromTeam}</span>
+            ${p.country ? `<span style="margin-left:6px; color:#666;">· ${p.country}</span>` : ''}
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="color:#4ade80; font-weight:bold; font-size:14px; white-space:nowrap;">${price}M €</span>
+        <button onclick="buyPlayerByObj('${p.name}','${p.isEuro ? 'EURO' : p.fromTeam}',${p.fromIdx})" style="padding:6px 14px; background:#166534; border:1px solid #4ade80; color:#fff; border-radius:6px; cursor:pointer; font-weight:bold;">Al</button>
+      </div>
+    `;
+    buyList.appendChild(card);
+  });
+
+  const sellList = document.getElementById('sellList');
+  sellList.innerHTML = '';
+  const starterArr = starterIndices[selectedTeam] || [];
+  SQUADS[selectedTeam].forEach((p, idx) => {
+    const price = sellPrice(p);
+    const inStarter = starterArr.includes(idx);
+    const posColor = {GK:'#f59e0b', DF:'#3b82f6', MF:'#10b981', WG:'#8b5cf6', FW:'#e94560'}[p.pos];
+    const card = document.createElement('div');
+    card.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:10px; margin:5px 0; background:#0f3460; border-radius:8px;';
+    card.innerHTML = `
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="width:36px; height:36px; border-radius:50%; background:${posColor}; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:14px;">${p.rating}</div>
+        <div>
+          <div style="font-weight:bold; font-size:13px;">${p.name}${inStarter ? ' <span style="color:#4ade80; font-size:10px;">İLK 11</span>' : ''}</div>
+          <div style="font-size:11px; color:#aaa;"><span style="background:${posColor}; color:#fff; padding:1px 5px; border-radius:3px; font-size:10px;">${ROLE_TR[p.role] || p.pos}</span></div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="color:#4ade80; font-weight:bold; font-size:13px;">${price}M €</span>
+        <button onclick="sellPlayer(${idx})" style="padding:6px 12px; background:#7f1d1d; border:1px solid #f87171; color:#fff; border-radius:6px; cursor:pointer; font-weight:bold;">Sat</button>
+      </div>
+    `;
+    sellList.appendChild(card);
+  });
+}
+
+function buyPlayerByObj(playerName, fromTeam, idx) {
+  const myBudget = LEAGUE.find(t => t.name === selectedTeam).budget;
+
+  if (fromTeam === 'EURO') {
+    const p = EURO_STARS[idx];
+    if (!p) return;
+    const price = buyPrice(p);
+    if (myBudget < price) { alert("Yetersiz bütçe! Gerekli: " + price + "M €"); return; }
+    if (!confirm(`${p.name} oyuncusunu ${p.club} kulübünden ${price}M € karşılığında almak istiyor musun?`)) return;
+    LEAGUE.find(t => t.name === selectedTeam).budget -= price;
+    SQUADS[selectedTeam].push({ name: p.name, pos: p.pos, role: p.role, rating: p.rating, goals: 0, fit: 100, inj: 0, susp: 0, yc: 0 });
+    delete starterIndices[selectedTeam];
+    ensureStarterSet(selectedTeam);
+    alert(`✅ ${p.name} transfer edildi!`);
+    renderTransfer();
+    updateTopBar();
+    return;
+  }
+
+  const p = SQUADS[fromTeam][idx];
+  if (!p) return;
+  const price = buyPrice(p);
+  if (myBudget < price) { alert("Yetersiz bütçe! Gerekli: " + price + "M €"); return; }
+  if (!confirm(`${p.name} oyuncusunu ${price}M € karşılığında almak istiyor musun?`)) return;
+  LEAGUE.find(t => t.name === selectedTeam).budget -= price;
+  LEAGUE.find(t => t.name === fromTeam).budget += price;
+  SQUADS[fromTeam].splice(idx, 1);
+  SQUADS[selectedTeam].push({ ...p, goals: 0, fit: 100, inj: 0, susp: 0, yc: 0 });
+  delete starterIndices[selectedTeam];
+  ensureStarterSet(selectedTeam);
+  alert(`✅ ${p.name} transfer edildi!`);
+  renderTransfer();
+  updateTopBar();
+}
+
+function sellPlayer(idx) {
+  const p = SQUADS[selectedTeam][idx];
+  if (!confirm(`${p.name} oyuncusunu satmak istiyor musun?`)) return;
+  const price = sellPrice(p);
+  LEAGUE.find(t => t.name === selectedTeam).budget += price;
+  SQUADS[selectedTeam].splice(idx, 1);
+  delete starterIndices[selectedTeam];
+  ensureStarterSet(selectedTeam);
+  alert(`✅ ${p.name} ${price}M € karşılığında satıldı!`);
+  renderTransfer();
+  updateTopBar();
+}
+
+// ============ PUAN DURUMU ============
+function getStandings() {
+  return [...LEAGUE].sort((a, b) => {
+    if (b.p !== a.p) return b.p - a.p;
+    const dA = a.gf - a.ga, dB = b.gf - b.ga;
+    if (dB !== dA) return dB - dA;
+    return b.gf - a.gf;
+  });
+}
+
+function renderStandings() {
+  const tbody = document.querySelector('#standingsTable tbody');
+  tbody.innerHTML = '';
+  getStandings().forEach((t, i) => {
+    const av = t.gf - t.ga;
+    const row = document.createElement('tr');
+    row.innerHTML = `<td>${i+1}</td><td>${tn(t.name, 22)}</td><td>${t.o}</td><td>${t.g}</td><td>${t.b}</td><td>${t.m}</td><td>${av > 0 ? '+' : ''}${av}</td><td><b>${t.p}</b></td>`;
+    tbody.appendChild(row);
+  });
+}
+
+function renderFixtureInfo() {
+  const info = document.getElementById('fixtureInfo');
+  const btn = document.getElementById('startBtn');
+  if (!selectedTeam) { info.textContent = "Önce takım seç."; return; }
+  const ev = pendingCupEvent();
+  if (ev) {
+    const my = getDraw(ev).find(m => m.home === selectedTeam || m.away === selectedTeam);
+    info.innerHTML = `<b>🏆 ${COMP_NAME[ev.comp]} — ${ev.name}</b><br>` + (my ? `Senin maçın: <b style="color:#e94560;">${my.home} vs ${my.away}</b>` : `Takımın bu turda yok — maçlar otomatik oynanacak.`);
+    if (btn) btn.textContent = my ? '🏆 Kupa Maçını Başlat' : '🏆 Kupa Turunu Oynat';
+    return;
+  }
+  if (btn) btn.textContent = '⚽ Maçı Başlat';
+  if (currentWeek >= fixtures.length) { info.textContent = "Sezon bitti!"; return; }
+  const week = fixtures[currentWeek];
+  const my = week.find(m => m.home === selectedTeam || m.away === selectedTeam);
+  info.innerHTML = `<b>Hafta ${currentWeek + 1}</b> — Senin maçın: <b style="color:#e94560;">${my.home} vs ${my.away}</b>`;
+}
+
+
+
+// ============ TEKNİK DİREKTÖR ============
+// Güce göre sıralı en iyi 5 hoca. Güç 70 = nötr; üstü takım gücünü artırır.
+const COACHES = [
+  { name: "Pep Guardiola",   power: 95, price: 50, country: "İspanya",    style: "Pozisyon futbolu" },
+  { name: "Carlo Ancelotti", power: 92, price: 32, country: "İtalya",     style: "Dengeli, tecrübeli" },
+  { name: "Jose Mourinho",   power: 89, price: 22, country: "Portekiz",   style: "Disiplinli savunma" },
+  { name: "Okan Buruk",      power: 86, price: 14, country: "Türkiye",    style: "Hücum odaklı" },
+  { name: "Şenol Güneş",     power: 82, price: 7,  country: "Türkiye",    style: "Pratik, sağlam" }
+].sort((a, b) => b.power - a.power);
+
+function coachOf(t) {
+  const x = typeof t === 'string' ? LEAGUE.find(l => l.name === t) : t;
+  return x && x.coach ? COACHES.find(c => c.name === x.coach) || null : null;
+}
+function coachMul(t) { const c = coachOf(t); return c ? 1 + (c.power - 70) / 700 : 1; }
+
+function renderCoach() {
+  const el = document.getElementById('coachBody');
+  if (!el) return;
+  if (!selectedTeam) { el.innerHTML = '<div class="hint-box">Önce takım seç.</div>'; return; }
+  const me = LEAGUE.find(t => t.name === selectedTeam), cur = coachOf(me);
+  document.getElementById('coachBudget').textContent = me.budget + 'M €';
+  let h = `<div class="coach-current"><span class="cc-ic">🧠</span><div><div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;">Mevcut Teknik Direktör</div>` +
+    (cur ? `<div style="font-weight:800;font-size:17px;">${cur.name} <span style="color:#fb923c;">· Güç ${cur.power}</span></div>` : `<div style="font-weight:800;font-size:17px;">Yok <span style="color:var(--muted);font-size:13px;font-weight:600;">(varsayılan güç 70 — bonus yok)</span></div>`) +
+    `</div></div><h3>🏅 Güce Göre En İyi 5 Teknik Direktör</h3>`;
+  COACHES.forEach((c, i) => {
+    const owned = cur && cur.name === c.name, can = me.budget >= c.price;
+    const bonus = ((coachBonusPct(c))).toFixed(1);
+    h += `<div class="coach-card${owned ? ' owned' : ''}"><div class="coach-rank">${i + 1}</div><div class="coach-pow">${c.power}</div>
+      <div class="coach-info"><div class="coach-name">${c.name}</div><div class="coach-meta">${c.country} · ${c.style} · takım gücüne +%${bonus}</div></div>
+      <span class="coach-price">${c.price}M €</span>
+      <button onclick="buyCoach('${c.name}')" ${owned || !can ? 'disabled' : ''} style="padding:8px 14px;">${owned ? '✓ Takımında' : can ? 'Transfer Et' : 'Bütçe Yetmiyor'}</button></div>`;
+  });
+  h += `<div class="hint-box" style="margin-top:14px;">💡 Teknik direktörün gücü, takımının hücum ve savunma gücünü artırır. Yeni bir hoca alırsan eskisi ayrılır (iade yoktur).</div>`;
+  el.innerHTML = h;
+}
+function coachBonusPct(c) { return (c.power - 70) / 7; }
+
+function buyCoach(name) {
+  if (!selectedTeam) return;
+  const c = COACHES.find(x => x.name === name), me = LEAGUE.find(t => t.name === selectedTeam);
+  if (!c) return;
+  if (me.coach === c.name) return;
+  if (me.budget < c.price) { alert('Yetersiz bütçe! Gerekli: ' + c.price + 'M €'); return; }
+  const old = coachOf(me);
+  if (!confirm(`${c.name} ile ${c.price}M € karşılığında anlaşmak istiyor musun?` + (old ? `\n${old.name} takımdan ayrılacak.` : ''))) return;
+  me.budget = +(me.budget - c.price).toFixed(1);
+  me.coach = c.name;
+  alert(`✅ ${c.name} teknik direktör oldu!`);
+  updateTopBar();
+  renderCoach();
+}
+
+// ============ FİKSTÜR LİSTESİ ============
+function recordLeagueWeek(w, mine, others) {
+  const wk = fixtures[w]; if (!wk) return;
+  [mine, ...others].forEach(r => {
+    const fx = wk.find(x => x.home === r.home && x.away === r.away);
+    if (fx) { fx.hGoals = r.hGoals; fx.aGoals = r.aGoals; }
+  });
+}
+
+function cupFixtureRow(ev) {
+  const cs = cupSeason, me = selectedTeam, base = { kind: ev.comp, label: ev.name };
+  const mineIn = a => (a || []).find(m => m.home === me || m.away === me);
+  if (cs.played[ev.key]) {
+    const r = mineIn(cs.results[ev.key]);
+    if (!r) return null;
+    return { ...base, home: r.home, away: r.away, played: true, res: `<span class="fx-score ${r.winner === me ? 'w' : 'l'}">${cupScoreTxt(r)}</span>` };
+  }
+  let d = cs.draws[ev.key];
+  if (!d && (ev.key === 'R1' || ev.key === 'SCSF' || (ev.key === 'SCF' && cs.played.SCSF))) d = getDraw(ev);
+  if (d) {
+    const m = mineIn(d);
+    if (!m) return null;
+    return { ...base, home: m.home, away: m.away, played: false, res: '<span class="fx-score">—</span>' };
+  }
+  if (ev.key === 'SCF') {
+    const sd = cs.draws.SCSF || getDraw(CUP_EVENTS.find(e => e.key === 'SCSF'));
+    return mineIn(sd) ? { ...base, played: false, note: 'Yarı finali kazanırsan', res: '' } : null;
+  }
+  if (ev.comp === 'cup' && cs.alive.includes(me)) return { ...base, played: false, note: 'Kura bekleniyor (kupada hayattaysan)', res: '' };
+  return null;
+}
+
+function renderFixtureList() {
+  const el = document.getElementById('fixtureList');
+  if (!el) return;
+  if (!selectedTeam) { el.innerHTML = '<div class="hint-box">Önce takım seç.</div>'; return; }
+  const me = selectedTeam, rows = [];
+  for (let w = 0; w < fixtures.length; w++) {
+    const fx = fixtures[w].find(m => m.home === me || m.away === me);
+    if (!fx) continue;
+    const played = w < currentWeek;
+    let res = '<span class="fx-score">—</span>';
+    if (played) {
+      if (fx.hGoals !== undefined) {
+        const my = fx.home === me ? fx.hGoals : fx.aGoals, op = fx.home === me ? fx.aGoals : fx.hGoals;
+        res = `<span class="fx-score ${my > op ? 'w' : my === op ? 'd' : 'l'}">${fx.hGoals} - ${fx.aGoals}</span>`;
+      } else res = '<span class="fx-score">✓</span>';
+    }
+    rows.push({ kind: 'lig', label: `${w + 1}. Hafta`, home: fx.home, away: fx.away, played, res });
+    if (cupSeason) CUP_EVENTS.filter(e => e.week === w + 1).forEach(ev => { const r = cupFixtureRow(ev); if (r) rows.push(r); });
+  }
+  const BADGE = { lig: 'SÜPER LİG', cup: 'ZİRAAT', sc: 'SÜPER KUPA' };
+  const nm = n => n === me ? `<b class="fx-me">${tn(n, 20)}</b>` : tn(n, 20);
+  const nextI = rows.findIndex(r => !r.played);
+  el.innerHTML = rows.map((r, i) => {
+    const isNext = i === nextI;
+    const teams = r.note ? `<span class="fx-note">${r.note}</span>` : `${nm(r.home)} <span style="color:var(--muted)">vs</span> ${nm(r.away)}`;
+    return `<div class="fx-row fx-${r.kind}${r.played ? ' played' : ''}${isNext ? ' next' : ''}"><span class="fx-badge">${BADGE[r.kind]}</span><div class="fx-main"><div class="fx-lbl">${r.label}${isNext ? ' · SIRADAKİ' : ''}</div><div class="fx-teams">${teams}</div></div><div class="fx-res">${r.res || ''}</div></div>`;
+  }).join('');
+  const n = el.querySelector('.next');
+  if (n) el.scrollTop = Math.max(0, n.offsetTop - 90);
+}
+
+function showScreen(id) {
+  ['menu','slots','teamSelect','standings','squad','fixture','matchday','transfer','coach','museum','upgrade'].forEach(s => { const el = document.getElementById(s); if (el) el.classList.add('hidden'); });
+  const target = document.getElementById(id);
+  if (target) target.classList.remove('hidden');
+  if (id === 'teamSelect') renderTeamGrid();
+  if (id === 'slots') renderSlots();
+  if (id === 'standings') renderStandings();
+  if (id === 'squad') renderSquad();
+  if (id === 'fixture') { renderCupCalendar(); renderFixtureList(); }
+  if (id === 'matchday') renderFixtureInfo();
+  if (id === 'transfer') renderTransfer();
+  if (id === 'coach') renderCoach();
+  if (id === 'museum') renderMuseum();
+  if (id === 'upgrade') renderUpgrade();
+  updateTopBar();
+  const selBtn = document.getElementById('selectTeamBtn');
+  if (selBtn) {
+    selBtn.disabled = teamLocked;
+    const _t = selBtn.querySelector('.mc-t'), _d = selBtn.querySelector('.mc-d');
+    if (_t) _t.textContent = teamLocked ? "Takım Seçildi ✓" : "Takım Seç";
+    if (_d) _d.textContent = teamLocked ? selectedTeam : "Kulübünü belirle";
+  }
+}
+
+function updateTopBar() {
+  if (selectedTeam) {
+    const t = LEAGUE.find(x => x.name === selectedTeam);
+    document.getElementById('selectedTeamLabel').innerHTML = tn(selectedTeam, 22);
+    document.getElementById('teamPoints').textContent = `${t.p} puan · ${t.o} maç`;
+    document.getElementById('budgetLabel').textContent = t.budget + "M €";
+    document.getElementById('coinLabel').textContent = coins + ' 🪙';
+  } else {
+    document.getElementById('selectedTeamLabel').textContent = "— seçilmedi —";
+    document.getElementById('teamPoints').textContent = "";
+    document.getElementById('budgetLabel').textContent = "—";
+    document.getElementById('coinLabel').textContent = "—";
+  }
+  document.getElementById('weekLabel').textContent = `Sezon ${season} · Hafta ${currentWeek}/${fixtures.length || 34}` + (selectedTeam ? ` · ${D().icon} ${D().label}` : '');
+  saveGame();
+}
+
+function renderTeamGrid() {
+  renderDiff();
+  const bb = document.getElementById('bankBox');
+  if (bb) bb.innerHTML = `🪙 Kulüp Cüzdanı: <b class="coin">${meta.bank} Coin</b> · 🔒 4 Büyük kilitli: kilidi coin ile aç (güçlü takım daha pahalı). Kupa kazanıp bir kariyer yuvasını sildiğinde kalan coin'lerin cüzdanına eklenir.`;
+  const grid = document.getElementById('teamGrid');
+  grid.innerHTML = '';
+  LEAGUE.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'team-btn';
+    btn.type = 'button';
+    if (selectedTeam === t.name || (!teamLocked && pendingTeam === t.name)) { btn.style.border = '1px solid transparent'; btn.style.setProperty('background', 'linear-gradient(135deg,#e94560,#ff7a59)', 'important'); }
+    if (teamLocked && selectedTeam !== t.name) { btn.disabled = true; btn.style.opacity = '0.3'; btn.style.cursor = 'not-allowed'; }
+    const _lk = !teamLocked && isLocked(t.name);
+    if (_lk) { btn.style.borderColor = 'rgba(251,191,36,0.6)'; }
+    btn.innerHTML = _lk ? `<div style="filter:grayscale(1) brightness(0.55);">${crest(t.name, 44)}</div><span style="font-weight:bold;">🔒 ${t.name}</span><span style="font-size:13px; color:#fbbf24; font-weight:800;">🪙 ${BIG4_COST[t.name]} Coin</span><span style="font-size:11px; color:#aaa;">Güç: ${t.strength} · Kilidi aç</span>` : `${crest(t.name, 44)}<span style="font-weight:bold;">${t.name}</span><span style="font-size:12px; color:#4ade80;">${teamLocked ? t.budget : startBudget(t.budget)}M €</span><span style="font-size:11px; color:#aaa;">Kadro: ${SQUADS[t.name].length}</span>`;
+    btn.onclick = function() { selectTeam(t.name); };
+    grid.appendChild(btn);
+  });
+  updateConfirmBar();
+}
+
+function updateConfirmBar() {
+  const bar = document.getElementById('confirmBar'); if (!bar) return;
+  bar.style.display = teamLocked ? 'none' : 'flex';
+  const info = document.getElementById('confirmInfo'), btn = document.getElementById('confirmBtn');
+  if (pendingTeam) {
+    info.innerHTML = `Seçilen: <b style="color:var(--text);">${tn(pendingTeam, 22)}</b> · ${D().icon} ${D().label} · ${startBudget(LEAGUE.find(x => x.name === pendingTeam).budget)}M €`;
+    btn.disabled = false;
+  } else { info.textContent = 'Bir takıma tıkla'; btn.disabled = true; }
+}
+
+function confirmTeam() {
+  if (teamLocked || !pendingTeam || isLocked(pendingTeam)) return;
+  const name = pendingTeam;
+  if (!confirm(`${name} ile ${D().label} modunda başlamak istiyor musun?\nSeçim tek seferliktir.`)) return;
+  selectedTeam = name;
+  teamLocked = true;
+  const _mt = LEAGUE.find(x => x.name === name); _mt.budget = startBudget(_mt.budget); coins = D().coin;
+  ensureStarterSet(name);
+  updateTopBar();
+  showScreen('squad');
+}
+
+function selectTeam(name) {
+  if (teamLocked) {
+    if (selectedTeam === name) { showScreen('squad'); return; }
+    alert("Takım seçimi kilitli! Başka takım için Kariyer Yuvaları'ndan başka bir yuva kullan.");
+    return;
+  }
+  if (isLocked(name)) { unlockTeam(name); return; }
+  pendingTeam = name;
+  renderTeamGrid();
+}
+
+function openMyTeam() {
+  if (!selectedTeam) { alert("Önce takım seç!"); showScreen('teamSelect'); return; }
+  showScreen('squad');
+}
+
+// ============ KAYIT / SIFIRLA ============
+function saveGame() {
+  if (!selectedTeam || !activeSlot) return;
+  try {
+    localStorage.setItem(slotKey(activeSlot), JSON.stringify({ LEAGUE, SQUADS, selectedTeam, teamLocked, currentWeek, fixtures, starterIndices, formations, season, museum, cupSeason, difficulty, coins, savedAt: Date.now() }));
+  } catch (e) {}
+}
+
+function readSlot(n) { try { const s = JSON.parse(localStorage.getItem(slotKey(n))); return (s && s.selectedTeam) ? s : null; } catch (e) { return null; } }
+
+function loadGame(n) {
+  const s = readSlot(n); if (!s) return false;
+  try {
+    LEAGUE = s.LEAGUE; SQUADS = s.SQUADS; selectedTeam = s.selectedTeam; teamLocked = s.teamLocked;
+    currentWeek = s.currentWeek; fixtures = s.fixtures; starterIndices = s.starterIndices; formations = s.formations; season = s.season || 1; difficulty = s.difficulty || 'normal'; coins = (typeof s.coins === 'number') ? s.coins : D().coin;
+    museum = s.museum || []; cupSeason = s.cupSeason || newCupSeason(season);
+    pendingTeam = null; liveTimer = null; myMatchState = null; otherMatchesThisWeek = [];
+    assignRoles();
+    if (BIG4_COST[selectedTeam] !== undefined && !meta.unlocked.includes(selectedTeam)) { meta.unlocked.push(selectedTeam); saveMeta(); }
+    return true;
+  } catch (e) { return false; }
+}
+
+// ============ KARİYER YUVALARI ============
+function migrateOldSave() {
+  try {
+    const old = localStorage.getItem(SAVE_KEY);
+    if (old && !localStorage.getItem(slotKey(1))) localStorage.setItem(slotKey(1), old);
+    if (old) localStorage.removeItem(SAVE_KEY);
+  } catch (e) {}
+}
+function stopLive() { try { if (liveTimer) clearInterval(liveTimer); } catch (e) {} liveTimer = null; }
+function openSlots() { saveGame(); showScreen('slots'); }
+function enterSlot(n) {
+  saveGame();                 // mevcut yuvayı kaydet
+  stopLive();
+  activeSlot = null; selectedTeam = null;
+  if (readSlot(n)) {
+    activeSlot = n;
+    if (loadGame(n)) { showScreen('menu'); return; }
+  }
+  // boş yuva: yeni kariyer
+  initGame();
+  activeSlot = n;
+  showScreen('teamSelect');
+}
+function deleteSlot(n) {
+  const s = readSlot(n); if (!s) return;
+  if (!confirm(`Yuva ${n} (${s.selectedTeam}) silinsin mi?\nKalan ${s.coins || 0} 🪙 coin kulüp cüzdanına eklenir.`)) return;
+  meta.bank += (typeof s.coins === 'number' ? s.coins : 0); saveMeta();
+  try { localStorage.removeItem(slotKey(n)); } catch (e) {}
+  if (activeSlot === n) { stopLive(); activeSlot = null; selectedTeam = null; initGame(); }
+  renderSlots();
+}
+function renderSlots() {
+  const g = document.getElementById('slotGrid'); if (!g) return;
+  let html = '';
+  for (let n = 1; n <= SLOT_COUNT; n++) {
+    const s = readSlot(n), cur = activeSlot === n;
+    if (s) {
+      const d = DIFF[s.difficulty] || DIFF.normal, me = (s.LEAGUE || []).find(t => t.name === s.selectedTeam);
+      html += `<div style="border:1px solid ${cur ? '#4ade80' : 'var(--border)'}; border-radius:16px; padding:14px; background:linear-gradient(160deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03)); display:flex; flex-direction:column; gap:8px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;"><b style="font-size:13px; color:var(--muted);">YUVA ${n}</b>${cur ? '<span style="font-size:11px; color:#4ade80;">● AKTİF</span>' : ''}</div>
+        <div style="display:flex; align-items:center; gap:10px;">${crest(s.selectedTeam, 40)}<b style="font-size:16px;">${s.selectedTeam}</b></div>
+        <div style="font-size:13px; color:var(--muted); line-height:1.6;">Sezon ${s.season || 1} · Hafta ${s.currentWeek}/${(s.fixtures && s.fixtures.length) || 34}<br>${d.icon} ${d.label} · 💰 ${me ? me.budget : '—'}M € · <span style="color:#fbbf24;">🪙 ${s.coins || 0}</span></div>
+        <div style="display:flex; gap:8px;"><button style="flex:1;" onclick="enterSlot(${n})">${cur ? '▶ Devam' : '▶ Yükle'}</button><button style="background:rgba(233,69,96,0.2) !important;" onclick="deleteSlot(${n})">🗑️</button></div>
+      </div>`;
+    } else {
+      html += `<div style="border:1px dashed var(--border); border-radius:16px; padding:14px; display:flex; flex-direction:column; gap:10px; align-items:center; justify-content:center; min-height:150px; text-align:center;">
+        <b style="font-size:13px; color:var(--muted);">YUVA ${n}</b><div style="font-size:28px;">➕</div><div style="font-size:13px; color:var(--muted);">Boş yuva</div>
+        <button onclick="enterSlot(${n})">Yeni Kariyer</button></div>`;
+    }
+  }
+  g.innerHTML = html;
+  const b = document.getElementById('slotBank'); if (b) b.innerHTML = `🪙 Kulüp Cüzdanı: <b class="coin">${meta.bank} Coin</b> · Tüm yuvalar aynı cüzdanı ve açılmış büyük takımları paylaşır.`;
+  const bk = document.getElementById('slotBack'); if (bk) bk.style.display = selectedTeam ? '' : 'none';
+}
+
+function resetGame() { openSlots(); }
+
+// ============ BAŞLAT ============
+loadMeta();
+migrateOldSave();
+initGame();
+showScreen('slots');
+
+
+// ============ OYUN LOGOSU (PM 27) ============
+function pmLogo(u) { return `<svg viewBox="0 0 512 512" width="100%" height="100%" role="img" aria-label="PM 27"><defs><linearGradient id="pur${u}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c084fc"/><stop offset="0.5" stop-color="#8b3df0"/><stop offset="1" stop-color="#5b21b6"/></linearGradient><linearGradient id="glow${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7c3aed" stop-opacity="0"/><stop offset="1" stop-color="#7c3aed" stop-opacity="0.55"/></linearGradient><path id="shield${u}" d="M256 24 L452 80 V250 C452 360 370 440 256 488 C142 440 60 360 60 250 V80 Z"/><clipPath id="inner${u}"><use href="#shield${u}" transform="translate(256 256) scale(0.9) translate(-256 -256)"/></clipPath></defs><use href="#shield${u}" fill="url(#pur${u})"/><use href="#shield${u}" fill="#0b0b10" transform="translate(256 256) scale(0.9) translate(-256 -256)"/><g clip-path="url(#inner${u})"><rect x="0" y="250" width="512" height="262" fill="url(#glow${u})"/><polygon points="0,150 512,40 512,90 0,200" fill="#7c3aed" opacity="0.28"/></g><use href="#shield${u}" fill="none" stroke="#ffffff" stroke-width="3" opacity="0.9" transform="translate(256 256) scale(0.82) translate(-256 -256)"/><g font-family="'Arial Black','Segoe UI',Arial,Helvetica,sans-serif" font-weight="900" text-anchor="middle" font-style="italic"><text x="264" y="274" font-size="160" letter-spacing="-4" fill="#7c3aed">PM</text><text x="256" y="266" font-size="160" letter-spacing="-4" fill="#ffffff">PM</text></g><g transform="skewX(-10) translate(58 0)"><rect x="176" y="292" width="170" height="82" rx="16" fill="#ffffff"/><rect x="176" y="292" width="170" height="82" rx="16" fill="none" stroke="#7c3aed" stroke-width="5"/></g><text x="256" y="352" font-family="'Arial Black','Segoe UI',Arial,Helvetica,sans-serif" font-weight="900" font-style="italic" font-size="70" text-anchor="middle" fill="#6d28d9">27</text></svg>`; }
+(function () {
+  try {
+    var st = document.querySelector('.st-ball'); if (st) { st.innerHTML = pmLogo('st'); st.style.cssText = 'width:clamp(120px,30vw,190px);height:clamp(120px,30vw,190px);font-size:0;'; }
+    var hd = document.querySelector('.app-logo'); if (hd) { hd.innerHTML = pmLogo('hd'); hd.style.cssText += ';background:none !important;box-shadow:none !important;border:none !important;width:56px;height:56px;padding:0;'; }
+    var raw = pmLogo('fv').replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
+    var l = document.querySelector('link[rel="icon"]') || document.createElement('link');
+    l.rel = 'icon'; l.type = 'image/svg+xml'; l.href = 'data:image/svg+xml,' + encodeURIComponent(raw);
+    document.head.appendChild(l);
+  } catch (e) {}
+})();
+
+// ============ ATD STUDIO AÇILIŞ ============
+var splashClosed = false;
+function closeSplash() {
+  if (splashClosed) return;
+  splashClosed = true;
+  var s = document.getElementById('splash');
+  s.classList.add('hide');
+  setTimeout(function () { s.remove(); }, 900);
+}
+setTimeout(closeSplash, 3800);
+</script>
+<div id="startScreen" role="dialog" aria-label="Başlangıç ekranı">
+  <div class="st-studio">ATD Studio sunar</div>
+  <div class="st-ball" aria-hidden="true">⚽</div>
+  <div>
+    <div class="st-title"><em>PRO</em> MANAGER <b>27</b></div>
+    <div class="st-sub">Süper Lig menajerlik · 2026-27</div>
+  </div>
+  <div class="st-actions">
+    <div class="st-btn primary" id="stPlay" role="button" tabindex="0"><span id="stPlayT">▶ Oyuna Başla</span><small id="stPlayInfo" class="hidden"></small></div>
+    <div class="st-btn danger hidden" id="stNew" role="button" tabindex="0">🔄 Yeni Oyun</div>
+    <div class="st-btn" id="stHow" role="button" tabindex="0" aria-expanded="false">❔ Nasıl Oynanır?</div>
+  </div>
+  <div class="st-howto" id="stHowBox">
+    <ul>
+      <li><span>🛡️</span><div><b>Takım Seç:</b> Kulübünü seç, seçimin sezon boyunca kilitli kalır.</div></li>
+      <li><span>👕</span><div><b>Kadro Yönetimi:</b> İlk 11'i ve dizilişi sürükle-bırak ile ayarla.</div></li>
+      <li><span>💸</span><div><b>Transfer Pazarı:</b> Bütçenle oyuncu al, gereksizleri sat.</div></li>
+      <li><span>🪙</span><div><b>Coin Mağazası:</b> Kupa kazan ya da bütçenden para yatır, Coin ile oyuncularını geliştir.</div></li>
+      <li><span>⚽</span><div><b>Maç Günü:</b> Haftalık maçı canlı izle, lig ve kupa fikstürünü takip et.</div></li>
+      <li><span>🏛️</span><div><b>Müze:</b> Kazandığın kupalar burada sergilenir.</div></li>
+    </ul>
+  </div>
+  <div class="st-foot">v1.0 · © ATD STUDIO</div>
+</div>
+<div id="musicCtl" class="off" title="Müzik">
+  <div id="musicBtn" role="button" tabindex="0" aria-label="Müziği aç/kapat">🔇</div>
+  <input id="musicVol" type="range" min="0" max="100" value="55" aria-label="Müzik sesi">
+</div>
+<script>
+(function () {
+  var KEY_ON = 'pm27_music_on', KEY_VOL = 'pm27_music_vol';
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+
+  var ctl = document.getElementById('musicCtl'), btn = document.getElementById('musicBtn'), vol = document.getElementById('musicVol');
+  var wantOn = lsGet(KEY_ON) !== '0';
+  var volume = lsGet(KEY_VOL) !== null ? Math.min(100, Math.max(0, +lsGet(KEY_VOL) || 0)) : 55;
+  vol.value = volume;
+
+  var AC = window.AudioContext || window.webkitAudioContext;
+  var ctx, master, delayIn, noiseBuf, timer, started = false;
+  var BPM = 96, SPB = 60 / BPM / 4;              // bir 16'lık vuruş süresi
+  var nextT = 0, step = 0;
+  var PADS = [[57,60,64],[53,57,60],[55,60,64],[55,59,62]];   // Am F C G
+  var BASS = [45,41,48,43];
+  function hz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+
+  function build() {
+    ctx = new AC();
+    var comp = ctx.createDynamicsCompressor();
+    master = ctx.createGain(); master.gain.value = 0;
+    master.connect(comp); comp.connect(ctx.destination);
+    // yankı (arp için)
+    var d = ctx.createDelay(1); d.delayTime.value = SPB * 3;
+    var fb = ctx.createGain(); fb.gain.value = 0.35;
+    var wet = ctx.createGain(); wet.gain.value = 0.28;
+    delayIn = ctx.createGain();
+    delayIn.connect(d); d.connect(fb); fb.connect(d); d.connect(wet); wet.connect(master);
+    // gürültü tamponu
+    noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+    var ch = noiseBuf.getChannelData(0);
+    for (var i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+    crowd();
+  }
+
+  function noiseSrc(loop) { var s = ctx.createBufferSource(); s.buffer = noiseBuf; s.loop = !!loop; return s; }
+
+  // stadyum kalabalığı uğultusu
+  function crowd() {
+    var s = noiseSrc(true), bp = ctx.createBiquadFilter(), g = ctx.createGain(), lfo = ctx.createOscillator(), lg = ctx.createGain();
+    bp.type = 'bandpass'; bp.frequency.value = 650; bp.Q.value = 0.4;
+    g.gain.value = 0.05; lfo.frequency.value = 0.13; lg.gain.value = 0.025;
+    lfo.connect(lg); lg.connect(g.gain);
+    s.connect(bp); bp.connect(g); g.connect(master);
+    s.start(); lfo.start();
+  }
+
+  function env(g, t, a, peak, dec) {
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(peak, t + a);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + a + dec);
+  }
+  function kick(t) {
+    var o = ctx.createOscillator(), g = ctx.createGain();
+    o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.14);
+    env(g, t, 0.003, 0.85, 0.32);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.4);
+  }
+  function hat(t, open) {
+    var s = noiseSrc(), hp = ctx.createBiquadFilter(), g = ctx.createGain();
+    hp.type = 'highpass'; hp.frequency.value = 7500;
+    env(g, t, 0.002, open ? 0.12 : 0.08, open ? 0.2 : 0.05);
+    s.connect(hp); hp.connect(g); g.connect(master); s.start(t, Math.random()); s.stop(t + 0.3);
+  }
+  function clap(t) {
+    var s = noiseSrc(), bp = ctx.createBiquadFilter(), g = ctx.createGain();
+    bp.type = 'bandpass'; bp.frequency.value = 1700; bp.Q.value = 0.9;
+    env(g, t, 0.003, 0.3, 0.14);
+    s.connect(bp); bp.connect(g); g.connect(master); s.start(t, Math.random()); s.stop(t + 0.25);
+  }
+  function bass(t, m, dur) {
+    var o = ctx.createOscillator(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    o.type = 'sawtooth'; o.frequency.value = hz(m);
+    f.type = 'lowpass'; f.frequency.setValueAtTime(700, t); f.frequency.exponentialRampToValueAtTime(180, t + dur);
+    env(g, t, 0.01, 0.34, dur);
+    o.connect(f); f.connect(g); g.connect(master); o.start(t); o.stop(t + dur + 0.1);
+  }
+  function pad(t, notes, dur) {
+    notes.forEach(function (m) {
+      [-6, 6].forEach(function (det) {
+        var o = ctx.createOscillator(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+        o.type = 'triangle'; o.frequency.value = hz(m); o.detune.value = det;
+        f.type = 'lowpass'; f.frequency.value = 1400;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.linearRampToValueAtTime(0.045, t + dur * 0.35);
+        g.gain.linearRampToValueAtTime(0.0001, t + dur + 0.4);
+        o.connect(f); f.connect(g); g.connect(master); o.start(t); o.stop(t + dur + 0.5);
+      });
+    });
+  }
+  function arp(t, m) {
+    var o = ctx.createOscillator(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    o.type = 'square'; o.frequency.value = hz(m);
+    f.type = 'lowpass'; f.frequency.setValueAtTime(2800, t); f.frequency.exponentialRampToValueAtTime(600, t + 0.25);
+    env(g, t, 0.004, 0.07, 0.24);
+    o.connect(f); f.connect(g); g.connect(master); g.connect(delayIn); o.start(t); o.stop(t + 0.35);
+  }
+
+  function play(st, t) {
+    var bar = Math.floor(st / 16) % 4, s = st % 16;
+    if (s === 0 || s === 8 || (s === 10 && bar % 2 === 1)) kick(t);
+    if (s === 4 || s === 12) clap(t);
+    if (s % 2 === 0) hat(t, false);
+    if (s === 14) hat(t, true);
+    if (s === 0) pad(t, PADS[bar], SPB * 16);
+    if (s === 0 || s === 6 || s === 10) bass(t, BASS[bar], SPB * (s === 0 ? 5 : 3));
+    if (s % 2 === 0) {
+      var ch = PADS[bar], seq = [0, 1, 2, 1, 2, 1, 0, 2];
+      arp(t, ch[seq[(s / 2) | 0]] + 12);
+    }
+  }
+  function tick() {
+    if (!ctx || ctx.state !== 'running') return;
+    while (nextT < ctx.currentTime + 0.2) { play(step, nextT); nextT += SPB; step = (step + 1) % 64; }
+  }
+
+  function setGain() {
+    if (!ctx) return;
+    var v = wantOn ? Math.pow(volume / 100, 1.6) * 0.9 : 0;
+    master.gain.setTargetAtTime(v, ctx.currentTime, 0.12);
+  }
+  function ui() {
+    ctl.classList.toggle('off', !wantOn);
+    ctl.classList.toggle('playing', started && wantOn);
+    btn.textContent = wantOn ? '🔊' : '🔇';
+  }
+  function start() {
+    if (!AC) return;
+    try {
+      if (!ctx) { build(); nextT = ctx.currentTime + 0.1; timer = setInterval(tick, 40); }
+      if (ctx.state === 'suspended') ctx.resume();
+      started = true; setGain(); ui();
+    } catch (e) {}
+  }
+  function toggle() {
+    wantOn = !wantOn; lsSet(KEY_ON, wantOn ? '1' : '0');
+    if (wantOn) { start(); if (ctx && ctx.state !== 'running') { ctx.resume(); nextT = ctx.currentTime + 0.1; } }
+    else { setGain(); }
+    ui();
+  }
+
+  // tarayıcılar ilk dokunuşa kadar ses çaldırmaz
+  function firstGesture(e) {
+    if (ctl.contains(e.target)) return;
+    document.removeEventListener('pointerdown', firstGesture, true);
+    document.removeEventListener('keydown', firstGesture, true);
+    if (wantOn) start();
+  }
+  document.addEventListener('pointerdown', firstGesture, true);
+  document.addEventListener('keydown', firstGesture, true);
+
+  btn.addEventListener('click', function () {
+    document.removeEventListener('pointerdown', firstGesture, true);
+    document.removeEventListener('keydown', firstGesture, true);
+    if (!started) { wantOn = true; lsSet(KEY_ON, '1'); start(); } else toggle();
+  });
+  btn.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); btn.click(); } });
+  vol.addEventListener('input', function () {
+    volume = +vol.value; lsSet(KEY_VOL, volume);
+    if (!wantOn && volume > 0) { wantOn = true; lsSet(KEY_ON, '1'); if (!started) start(); ui(); }
+    setGain();
+  });
+
+  // sekme arka plandayken sustur
+  document.addEventListener('visibilitychange', function () {
+    if (!ctx) return;
+    if (document.hidden) ctx.suspend();
+    else if (wantOn) { ctx.resume(); nextT = ctx.currentTime + 0.1; }
+  });
+
+  ui();
+  window.__music = { get state() { return ctx ? ctx.state : 'none'; }, get on() { return wantOn; } };
+})();
+</script>
+<script>
+(function () {
+  var el = document.getElementById('startScreen'), play = document.getElementById('stPlay'), info = document.getElementById('stPlayInfo'),
+      playT = document.getElementById('stPlayT'), nw = document.getElementById('stNew'), how = document.getElementById('stHow'), box = document.getElementById('stHowBox');
+
+  function hasSave() { try { return !!selectedTeam; } catch (e) { return false; } }
+
+  function refresh() {
+    var s = hasSave();
+    nw.classList.add('hidden');
+    info.classList.toggle('hidden', !s);
+    playT.textContent = s ? '▶ Devam Et' : '▶ Kariyer Seç';
+    if (s) {
+      var line = '';
+      try { line += tn(selectedTeam, 18) + ' '; } catch (e) { line += selectedTeam + ' '; }
+      try { line += '<span>· Yuva ' + activeSlot + ' · Sezon ' + season + ' · Hafta ' + currentWeek + '/' + ((fixtures && fixtures.length) || 34) + '</span>'; } catch (e) {}
+      info.innerHTML = line;
+    }
+  }
+  function show() {
+    refresh();
+    document.body.classList.add('on-start');
+    el.classList.remove('gone'); el.classList.remove('leaving');
+    el.scrollTop = 0;
+  }
+  function hide() {
+    el.classList.add('leaving');
+    document.body.classList.remove('on-start');
+    setTimeout(function () { el.classList.add('gone'); }, 460);
+  }
+  function go() {
+    hide();
+    try { showScreen(hasSave() ? 'menu' : 'slots'); } catch (e) {}
+  }
+  function newGame() {
+    hide(); try { openSlots(); } catch (e) {}
+  }
+  function toggleHow() {
+    var o = !box.classList.contains('open');
+    box.classList.toggle('open', o);
+    how.setAttribute('aria-expanded', o);
+    if (o) setTimeout(function () { box.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 200);
+  }
+  function key(fn) { return function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); } }; }
+
+  play.addEventListener('click', go);   play.addEventListener('keydown', key(go));
+  nw.addEventListener('click', newGame); nw.addEventListener('keydown', key(newGame));
+  how.addEventListener('click', toggleHow); how.addEventListener('keydown', key(toggleHow));
+
+  // oyun içinden logoya dokununca başlangıç ekranına dön
+  var hd = document.querySelector('.app-header');
+  if (hd) { hd.title = 'Başlangıç ekranı'; hd.addEventListener('click', show); }
+
+  refresh();
+  window.__start = { show: show, hide: hide };
+})();
+</script>
+</body>
+</html>
